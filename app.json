@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "emmafrontent",
-    "slug": "emmafrontent",
+    "name": "emmafrontend",
+    "slug": "emmafrontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "emmafrontent",
+    "scheme": "emmafrontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
