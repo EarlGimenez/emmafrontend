@@ -67,13 +67,13 @@ const PWDVerificationScreen = ({ navigation, route }: any) => {
               <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
                 <Text style={styles.uploadButtonText}>Upload ID</Text>
               </TouchableOpacity>
-
-              {uploadedImage && (
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: uploadedImage }} style={styles.previewImage} />
-                </View>
-              )}
             </View>
+
+            {uploadedImage && (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: uploadedImage }} style={styles.previewImage} />
+              </View>
+            )}
           </View>
 
           <View style={commonStyles.bottomButton}>
@@ -90,8 +90,9 @@ const PWDVerificationScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   uploadSection: {
     width: "100%",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   uploadButton: {
     backgroundColor: colors.primary,
@@ -100,23 +101,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     maxHeight: 40,
     justifyContent: "center",
-    width: 150,
-    marginBottom: 20,
+    width: 100,
   },
   uploadButtonText: {
     color: colors.white,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   imageContainer: {
     width: "100%",
     paddingHorizontal: 20,
+    marginBottom: 20,
   },
   previewImage: {
     width: "100%",
     height: 200,
     borderRadius: 15,
     resizeMode: "cover",
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
 })
 

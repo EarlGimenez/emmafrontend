@@ -53,52 +53,67 @@ const GeneralVerificationScreen = ({ navigation, route }: any) => {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← User Identity Verification</Text>
+          <Text style={commonStyles.backArrow}>←</Text>
+          <Text style={commonStyles.backButtonText}>User Identity Verification</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
           <Text style={commonStyles.title}>User Identity Verification</Text>
-          <Text style={commonStyles.subtitle}>Upload a clear photo of the ID(s)</Text>
+          <Text style={[commonStyles.subtitle, { textAlign: "center", paddingHorizontal: 20 }]}>
+            Upload a clear photo of the ID(s)
+          </Text>
 
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>Primary Government-issued ID Type</Text>
-            <Picker selectedValue={primaryIdType} onValueChange={setPrimaryIdType} style={styles.picker}>
-              <Picker.Item label="Select ID Type" value="" />
-              {idTypes.map((type) => (
-                <Picker.Item key={type} label={type} value={type} />
-              ))}
-            </Picker>
+          <View style={commonStyles.centeredContent}>
+            <View style={styles.pickerContainer}>
+              <Text style={styles.label}>Primary Government-issued ID Type</Text>
+              <Picker selectedValue={primaryIdType} onValueChange={setPrimaryIdType} style={styles.picker}>
+                <Picker.Item label="Select ID Type" value="" />
+                {idTypes.map((type) => (
+                  <Picker.Item key={type} label={type} value={type} />
+                ))}
+              </Picker>
+            </View>
+
+            <View style={styles.uploadSection}>
+              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("primary")}>
+                <Text style={styles.uploadButtonText}>Upload Primary ID</Text>
+              </TouchableOpacity>
+            </View>
+
+            {primaryImage && (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: primaryImage }} style={styles.previewImage} />
+              </View>
+            )}
+
+            <View style={styles.pickerContainer}>
+              <Text style={styles.label}>Secondary Government-issued ID Type (Optional)</Text>
+              <Picker selectedValue={secondaryIdType} onValueChange={setSecondaryIdType} style={styles.picker}>
+                <Picker.Item label="Select ID Type" value="" />
+                {idTypes.map((type) => (
+                  <Picker.Item key={type} label={type} value={type} />
+                ))}
+              </Picker>
+            </View>
+
+            <View style={styles.uploadSection}>
+              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("secondary")}>
+                <Text style={styles.uploadButtonText}>Upload Secondary ID</Text>
+              </TouchableOpacity>
+            </View>
+
+            {secondaryImage && (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: secondaryImage }} style={styles.previewImage} />
+              </View>
+            )}
           </View>
 
-          <View style={styles.uploadContainer}>
-            <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("primary")}>
-              <Text style={styles.uploadButtonText}>Upload</Text>
+          <View style={commonStyles.bottomButton}>
+            <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
+              <Text style={commonStyles.buttonText}>Next</Text>
             </TouchableOpacity>
-
-            {primaryImage && <Image source={{ uri: primaryImage }} style={styles.previewImage} />}
           </View>
-
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>Secondary Government-issued ID Type (Optional)</Text>
-            <Picker selectedValue={secondaryIdType} onValueChange={setSecondaryIdType} style={styles.picker}>
-              <Picker.Item label="Select ID Type" value="" />
-              {idTypes.map((type) => (
-                <Picker.Item key={type} label={type} value={type} />
-              ))}
-            </Picker>
-          </View>
-
-          <View style={styles.uploadContainer}>
-            <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("secondary")}>
-              <Text style={styles.uploadButtonText}>Upload</Text>
-            </TouchableOpacity>
-
-            {secondaryImage && <Image source={{ uri: secondaryImage }} style={styles.previewImage} />}
-          </View>
-
-          <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
-            <Text style={commonStyles.buttonText}>Next</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </LinearGradient>
@@ -108,39 +123,50 @@ const GeneralVerificationScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   pickerContainer: {
     marginBottom: 15,
+    width: "100%",
   },
   label: {
     fontSize: 14,
     color: colors.primary,
     marginBottom: 5,
+    fontWeight: "500",
   },
   picker: {
     backgroundColor: colors.fieldBg,
-    borderRadius: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  uploadContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  uploadSection: {
+    width: "100%",
+    alignItems: "flex-start",
     marginBottom: 20,
   },
   uploadButton: {
     backgroundColor: colors.primary,
-    padding: 10,
-    borderRadius: 8,
-    width: 100,
+    padding: 12,
+    borderRadius: 15,
     alignItems: "center",
-    marginRight: 15,
+    maxHeight: 40,
+    justifyContent: "center",
+    width: 140,
   },
   uploadButtonText: {
     color: colors.white,
     fontSize: 14,
     fontWeight: "600",
   },
+  imageContainer: {
+    width: "100%",
+    marginBottom: 20,
+  },
   previewImage: {
-    width: 100,
-    height: 80,
-    borderRadius: 8,
+    width: "100%",
+    height: 200,
+    borderRadius: 15,
     resizeMode: "cover",
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
 })
 
