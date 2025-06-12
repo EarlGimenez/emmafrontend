@@ -40,8 +40,7 @@ const ParentVerificationScreen = ({ navigation, route }: any) => {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>Registration</Text>
+          <Text style={commonStyles.backButtonText}>← Registration</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

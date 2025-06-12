@@ -102,9 +102,11 @@ export const commonStyles = StyleSheet.create({
     bottom: 30,
     left: 20,
     right: 20,
+    marginHorizontal: 20,
   },
   centeredContent: {
     alignItems: "center",
     paddingHorizontal: 20,
+
   },
 })

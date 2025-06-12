@@ -34,8 +34,7 @@ const LocationDetailsScreen = ({ navigation }: any) => {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>Location Details</Text>
+          <Text style={commonStyles.backButtonText}>← Location Details</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

@@ -1,27 +1,79 @@
 "use client"
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native"
+import { useState, useEffect } from "react"
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native"
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
 const { width } = Dimensions.get("window")
 
 const HouseholdScanScreen = ({ navigation }: any) => {
-  const handleScan = () => {
-    // Log scan action
-    console.log("QR Code scanned - joining household")
+  const [permission, requestPermission] = useCameraPermissions()
+  const [scanning, setScanning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [facing, setFacing] = useState<CameraType>('back')
 
-    // Simulate QR code scan - in real app this would use camera
-    navigation.navigate("HouseholdInfo", { householdName: "Smith Family Household" })
+  // Check permission and start scanning on mount
+  useEffect(() => {
+    const checkAndStartScanning = async () => {
+      if (!permission?.granted) {
+        const result = await requestPermission()
+        if (result.granted) {
+          setScanning(true)
+        }
+      } else {
+        setScanning(true)
+      }
+    }
+    checkAndStartScanning()
+  }, [permission?.granted])
+
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    setScanning(false)
+    navigation.navigate("HouseholdInfo", { householdName: data })
+  }
+
+  const handleStartScan = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission()
+      if (!result.granted) {
+        setError("Camera permission denied")
+        return
+      }
+    }
+    setScanning(true)
   }
 
   const handleSkip = () => {
-    // Log skip action
-    console.log("Household scan skipped - proceeding to location details")
-
     navigation.navigate("LocationDetails")
   }
 
-  return (
+  if (!permission) {
+    return (
+      <View style={[commonStyles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 16 }}>Checking camera permissions...</Text>
+      </View>
+    )
+  }
+
+  if (!permission.granted) {
+    return (
+      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+        <View style={[commonStyles.container, { justifyContent: "center", padding: 20 }]}>
+          <Text style={styles.instructionText}>We need your permission to scan QR codes</Text>
+          <TouchableOpacity 
+            style={styles.skipButton} 
+            onPress={requestPermission}
+          >
+            <Text style={commonStyles.buttonText}>Grant Permission</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    )
+  }
+
+ return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
@@ -35,16 +87,30 @@ const HouseholdScanScreen = ({ navigation }: any) => {
           <View style={styles.contentContainer}>
             <Text style={styles.instructionText}>Scan a household QR code to join</Text>
 
-            <TouchableOpacity style={styles.scannerContainer} onPress={handleScan}>
+            <View style={styles.scannerContainer}>
               <View style={styles.scannerBox}>
-                <View style={styles.scannerFrame}>
-                  <Text style={styles.scannerIcon}>📷</Text>
-                  <Text style={styles.scannerText}>Tap to scan QR code</Text>
-                </View>
+                {permission?.granted ? (
+                  <CameraView
+                    style={styles.camera}
+                    facing={facing}
+                    barcodeScannerSettings={{
+                      barcodeTypes: ["qr"],
+                    }}
+                    onBarcodeScanned={handleBarCodeScanned}
+                  />
+                ) : (
+                  <TouchableOpacity onPress={handleStartScan}>
+                    <View style={styles.scannerFrame}>
+                      <Text style={styles.scannerIcon}>📷</Text>
+                      <Text style={styles.scannerText}>Tap to scan QR code</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
-            </TouchableOpacity>
+            </View>
 
             <Text style={styles.noteText}>Note: A household QR code can be generated from parent/guardian account</Text>
+            {error && <Text style={styles.errorText}>{error}</Text>}
           </View>
 
           <View style={commonStyles.bottomButton}>
@@ -110,8 +176,37 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
     alignItems: "center",
-    maxHeight: 40,
+    maxHeight: 50,
     justifyContent: "center",
+  },
+  cameraContainer: {
+    width: width * 0.9,
+    height: width * 1.1,
+    borderRadius: 20,
+    overflow: "hidden",
+    alignSelf: "center",
+    marginVertical: 30,
+  },
+  camera: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 17
+  },
+  cancelButton: {
+    backgroundColor: colors.primary,
+    padding: 12,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    alignSelf: "center",
+    width: 120,
+  },
+  errorText: {
+    color: "#ff0000",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 10,
   },
 })
 
