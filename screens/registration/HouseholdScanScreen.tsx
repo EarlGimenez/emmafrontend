@@ -4,10 +4,14 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
+import { API_URLS } from "@/config/api"
+import { fetcher } from "@/utils/fetcher"
 
 const { width } = Dimensions.get("window")
 
 const HouseholdScanScreen = ({ navigation }: any) => {
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [debugMessage, setDebugMessage] = useState<string | null>(null)
   const [permission, requestPermission] = useCameraPermissions()
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,10 +32,53 @@ const HouseholdScanScreen = ({ navigation }: any) => {
     checkAndStartScanning()
   }, [permission?.granted])
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
-    setScanning(false)
-    navigation.navigate("HouseholdInfo", { householdName: data })
-  }
+const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
+    try {
+      if (isProcessing) {
+        setDebugMessage("Still processing previous scan...")
+        return
+      }
+
+      setIsProcessing(true)
+      setDebugMessage("QR Code detected: " + data)
+
+      if (!data.includes('family')) {
+        setError('Invalid QR code format - Not a family QR code')
+        setDebugMessage("Invalid QR format")
+        setIsProcessing(false)
+        return
+      }
+
+      const familyId = data.split('/').pop()
+
+      if (!familyId) {
+        setError('Could not extract family ID from QR code')
+        setDebugMessage("No family ID found")
+        setIsProcessing(false)
+        return
+      }
+
+      setDebugMessage("Fetching family info...")
+      
+      try {
+        const familyData = await fetcher(API_URLS.family.get(familyId))
+        setDebugMessage("Family found: " + familyData.familyName)
+        navigation.navigate("HouseholdInfo", { 
+          householdName: familyData.familyName,
+          familyId: familyId
+        })
+      } catch (apiError) {
+        setError('Network error - Check your connection')
+        setDebugMessage("Network error: " + (apiError instanceof Error ? apiError.message : String(apiError)))
+      }
+
+    } catch (error) {
+      setError('Failed to process QR code')
+      setDebugMessage("Processing error: " + (error instanceof Error ? error.message : String(error)))
+    } finally {
+      setIsProcessing(false)
+    }
+}
 
   const handleStartScan = async () => {
     if (!permission?.granted) {
@@ -108,9 +155,16 @@ const HouseholdScanScreen = ({ navigation }: any) => {
                 )}
               </View>
             </View>
-
+                  
             <Text style={styles.noteText}>Note: A household QR code can be generated from parent/guardian account</Text>
             {error && <Text style={styles.errorText}>{error}</Text>}
+            {debugMessage && <Text style={styles.debugText}>{debugMessage}</Text>}
+            {isProcessing && (
+              <View style={styles.processingContainer}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.processingText}>Processing QR code...</Text>
+              </View>
+            )}
           </View>
 
           <View style={commonStyles.bottomButton}>
@@ -208,6 +262,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
   },
+  debugText: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: 'monospace'
+  },
+  processingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    gap: 10
+  },
+  processingText: {
+    color: colors.primary,
+    fontSize: 14
+  }
 })
 
 export default HouseholdScanScreen
