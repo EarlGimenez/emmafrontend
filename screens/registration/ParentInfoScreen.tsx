@@ -28,7 +28,7 @@ const ParentInfoScreen = ({ navigation }: any) => {
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>Parent/Guardian Information</Text>
+          <Text style={commonStyles.backButtonText}>Registration</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
