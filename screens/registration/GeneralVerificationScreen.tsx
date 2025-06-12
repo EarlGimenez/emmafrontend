@@ -38,9 +38,14 @@ const GeneralVerificationScreen = ({ navigation, route }: any) => {
       ...userData,
       primaryIdType,
       secondaryIdType,
-      primaryImage,
-      secondaryImage,
+      primaryImage: primaryImage ? "Primary image uploaded" : "No primary image",
+      secondaryImage: secondaryImage ? "Secondary image uploaded" : "No secondary image",
+      verificationType: userData.accountType === "parent" ? "Parent/Guardian" : "General User",
+      timestamp: new Date().toISOString(),
     }
+
+    console.log("Identity verification completed:", completeUserData)
+
     navigation.navigate("AdditionalInfo", { userData: completeUserData })
   }
 

@@ -19,21 +19,28 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
       dateOfBirth,
       contactNumber,
       emailAddress,
+      timestamp: new Date().toISOString(),
     }
+
+    console.log("Basic personal information collected:", userData)
 
     // Navigate to appropriate verification screen based on account type
     switch (accountType) {
       case "pwd":
+        console.log("Navigating to PWD verification")
         navigation.navigate("PWDVerification", { userData })
         break
       case "senior":
+        console.log("Navigating to Senior verification")
         navigation.navigate("SeniorVerification", { userData })
         break
       case "parent":
       case "general":
+        console.log("Navigating to General verification")
         navigation.navigate("GeneralVerification", { userData })
         break
       default:
+        console.log("Default navigation to General verification")
         navigation.navigate("GeneralVerification", { userData })
     }
   }

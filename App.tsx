@@ -15,6 +15,14 @@ import OTPScreen from "./screens/registration/OTPScreen"
 import VerificationSuccessScreen from "./screens/registration/VerificationSuccessScreen"
 import ChildInfoScreen from "./screens/registration/ChildInfoScreen"
 import AdditionalInfoScreen from "./screens/registration/AdditionalInfoScreen"
+import HouseholdScanScreen from "./screens/registration/HouseholdScanScreen"
+import HouseholdInfoScreen from "./screens/registration/HouseholdInfoScreen"
+import LocationDetailsScreen from "./screens/registration/LocationDetailsScreen"
+import EvacuationCenterScreen from "./screens/registration/EvacuationCenterScreen"
+import EvacuationDetailsScreen from "./screens/registration/EvacuationDetailsScreen"
+import AccountSetupScreen from "./screens/registration/AccountSetupScreen"
+import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
+import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
 
 const Stack = createStackNavigator()
 
@@ -37,6 +45,14 @@ export default function App() {
         <Stack.Screen name="VerificationSuccess" component={VerificationSuccessScreen} />
         <Stack.Screen name="ChildInfo" component={ChildInfoScreen} />
         <Stack.Screen name="AdditionalInfo" component={AdditionalInfoScreen} />
+        <Stack.Screen name="HouseholdScan" component={HouseholdScanScreen} />
+        <Stack.Screen name="HouseholdInfo" component={HouseholdInfoScreen} />
+        <Stack.Screen name="LocationDetails" component={LocationDetailsScreen} />
+        <Stack.Screen name="EvacuationCenter" component={EvacuationCenterScreen} />
+        <Stack.Screen name="EvacuationDetails" component={EvacuationDetailsScreen} />
+        <Stack.Screen name="AccountSetup" component={AccountSetupScreen} />
+        <Stack.Screen name="AccountSuccess" component={AccountSuccessScreen} />
+        <Stack.Screen name="FinalReminders" component={FinalRemindersScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

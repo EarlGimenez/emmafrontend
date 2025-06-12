@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
@@ -9,7 +9,6 @@ const ParentInfoScreen = ({ navigation }: any) => {
   const [firstName, setFirstName] = useState("")
   const [middleName, setMiddleName] = useState("")
   const [lastName, setLastName] = useState("")
-  const [dateOfBirth, setDateOfBirth] = useState("")
   const [contactNumber, setContactNumber] = useState("")
   const [emailAddress, setEmailAddress] = useState("")
 
@@ -18,7 +17,6 @@ const ParentInfoScreen = ({ navigation }: any) => {
       firstName,
       middleName,
       lastName,
-      dateOfBirth,
       contactNumber,
       emailAddress,
     }
@@ -29,55 +27,75 @@ const ParentInfoScreen = ({ navigation }: any) => {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Parent/Guardian Information</Text>
+          <Text style={commonStyles.backArrow}>←</Text>
+          <Text style={commonStyles.backButtonText}>Parent/Guardian Information</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
-          <Text style={commonStyles.title}>Parent/Guardian's Personal Information</Text>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={commonStyles.title}>Parent/Guardian's Personal Information</Text>
 
-          <TextInput
-            style={commonStyles.input}
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
+            <View style={commonStyles.centeredContent}>
+              <View style={commonStyles.fieldContainer}>
+                <Text style={commonStyles.fieldLabel}>First Name</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  placeholder="First Name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                />
+              </View>
 
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Middle Name"
-            value={middleName}
-            onChangeText={setMiddleName}
-          />
+              <View style={commonStyles.fieldContainer}>
+                <Text style={commonStyles.fieldLabel}>Middle Name</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  placeholder="Middle Name"
+                  value={middleName}
+                  onChangeText={setMiddleName}
+                />
+              </View>
 
-          <TextInput style={commonStyles.input} placeholder="Last Name" value={lastName} onChangeText={setLastName} />
+              <View style={commonStyles.fieldContainer}>
+                <Text style={commonStyles.fieldLabel}>Last Name</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                />
+              </View>
 
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Date of Birth (MM/DD/YYYY)"
-            value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-          />
+              <View style={commonStyles.fieldContainer}>
+                <Text style={commonStyles.fieldLabel}>Contact Number</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  placeholder="Contact Number"
+                  value={contactNumber}
+                  onChangeText={setContactNumber}
+                  keyboardType="phone-pad"
+                />
+              </View>
 
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Contact Number"
-            value={contactNumber}
-            onChangeText={setContactNumber}
-            keyboardType="phone-pad"
-          />
+              <View style={commonStyles.fieldContainer}>
+                <Text style={commonStyles.fieldLabel}>Email Address</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  placeholder="Email Address"
+                  value={emailAddress}
+                  onChangeText={setEmailAddress}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+          </ScrollView>
 
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Email Address"
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
-            <Text style={commonStyles.buttonText}>Next</Text>
-          </TouchableOpacity>
+          <View style={commonStyles.bottomButton}>
+            <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
+              <Text style={commonStyles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </LinearGradient>

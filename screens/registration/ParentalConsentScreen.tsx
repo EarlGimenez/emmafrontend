@@ -18,7 +18,7 @@ const ParentalConsentScreen = ({ navigation }: any) => {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Parental Consent</Text>
+          <Text style={commonStyles.backButtonText}>← Registration</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

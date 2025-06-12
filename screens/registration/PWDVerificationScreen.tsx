@@ -28,8 +28,13 @@ const PWDVerificationScreen = ({ navigation, route }: any) => {
     const completeUserData = {
       ...userData,
       pwdIdNumber,
-      uploadedImage,
+      uploadedImage: uploadedImage ? "Image uploaded" : "No image",
+      verificationType: "PWD",
+      timestamp: new Date().toISOString(),
     }
+
+    console.log("PWD verification completed:", completeUserData)
+
     navigation.navigate("AdditionalInfo", { userData: completeUserData })
   }
 

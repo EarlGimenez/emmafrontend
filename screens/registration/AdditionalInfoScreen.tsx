@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
@@ -21,17 +21,13 @@ const AdditionalInfoScreen = ({ navigation, route }: any) => {
         relationship: emergencyContactRelationship,
         contactNumber: emergencyContactNumber,
       },
+      timestamp: new Date().toISOString(),
     }
 
-    // Here you would typically send the data to your Laravel backend
-    console.log("Complete User Data:", completeUserData)
+    console.log("Additional user information collected:", completeUserData)
 
-    Alert.alert("Registration Complete", "Your registration has been submitted successfully!", [
-      {
-        text: "OK",
-        onPress: () => navigation.navigate("Login"),
-      },
-    ])
+    // Navigate to household scan instead of showing alert
+    navigation.navigate("HouseholdScan", { userData: completeUserData })
   }
 
   return (
@@ -97,7 +93,7 @@ const AdditionalInfoScreen = ({ navigation, route }: any) => {
 
           <View style={commonStyles.bottomButton}>
             <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
-              <Text style={commonStyles.buttonText}>Complete Registration</Text>
+              <Text style={commonStyles.buttonText}>Next</Text>
             </TouchableOpacity>
           </View>
         </View>

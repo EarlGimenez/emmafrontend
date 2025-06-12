@@ -28,8 +28,13 @@ const SeniorVerificationScreen = ({ navigation, route }: any) => {
     const completeUserData = {
       ...userData,
       seniorIdNumber,
-      uploadedImage,
+      uploadedImage: uploadedImage ? "Image uploaded" : "No image",
+      verificationType: "Senior Citizen",
+      timestamp: new Date().toISOString(),
     }
+
+    console.log("Senior Citizen verification completed:", completeUserData)
+
     navigation.navigate("AdditionalInfo", { userData: completeUserData })
   }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native"
+import { View, Text, TextInput, TouchableOpacity } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
@@ -13,6 +13,7 @@ const ChildInfoScreen = ({ navigation, route }: any) => {
 
   const handleNext = () => {
     const completeData = {
+      registrationType: "child",
       parentData,
       childData: {
         fullName,
@@ -21,15 +22,11 @@ const ChildInfoScreen = ({ navigation, route }: any) => {
       },
     }
 
-    // Here you would typically send the data to your Laravel backend
+    // Log the complete child registration data
     console.log("Complete Child Registration Data:", completeData)
 
-    Alert.alert("Registration Complete", "Child registration has been submitted successfully!", [
-      {
-        text: "OK",
-        onPress: () => navigation.navigate("Login"),
-      },
-    ])
+    // Navigate to household scan instead of showing alert
+    navigation.navigate("HouseholdScan", { userData: completeData })
   }
 
   return (

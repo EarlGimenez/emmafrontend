@@ -24,8 +24,7 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     marginTop: "10%", // 80% of the view
     paddingTop: 20,
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingHorizontal: 40,
   },
   title: {
     fontSize: 28,
@@ -57,6 +56,7 @@ export const commonStyles = StyleSheet.create({
     borderRadius: 15,
     padding: 15,
     fontSize: 16,
+    marginBottom: 10
   },
   button: {
     backgroundColor: colors.primary,
@@ -65,12 +65,11 @@ export const commonStyles = StyleSheet.create({
     alignItems: "center",
     maxHeight: 50,
     justifyContent: "center",
-    marginHorizontal: 20,
   },
   buttonSecondary: {
     backgroundColor: colors.secondary,
     padding: 12,
-    borderRadius: 20,
+    borderRadius: 30,
     alignItems: "center",
     maxHeight: 40,
     justifyContent: "center",

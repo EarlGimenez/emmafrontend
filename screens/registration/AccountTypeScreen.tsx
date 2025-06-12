@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     marginBottom: 15,
-    marginHorizontal: 20,
     justifyContent: "center",
   },
   typeButtonText: {
