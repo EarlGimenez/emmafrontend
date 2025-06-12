@@ -43,7 +43,7 @@ const SeniorVerificationScreen = ({ navigation, route }: any) => {
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>User Identity Verification</Text>
+          <Text style={commonStyles.backButtonText}>Verification</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
