@@ -10,6 +10,12 @@ export const colors = {
 }
 
 export const commonStyles = StyleSheet.create({
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 10
+  },
   mainThemeBackground: {
     flex: 1,
     backgroundColor: colors.gradientStart,
