@@ -1,5 +1,5 @@
 // Get the IP address from environment or use default
-const DEV_IP = '172.30.11.254' // Your development machine IP
+const DEV_IP = '192.168.1.16' // Your development machine IP
 const DEV_PORT = '8000'
 const PROD_URL = 'https://api.yourapp.com' // Future production URL
 
@@ -15,5 +15,11 @@ export const API_URLS = {
   users: {
     temp: `${BASE_URL}/users/temp`,
     complete: (userId: number) => `${BASE_URL}/users/${userId}/complete`,
+  },
+  mapGeoCode: {
+    geocode: `http://${BASE_URL}/api/geocode`,
+    reverse_geocode: `http://${BASE_URL}/api/reverse-geocode`,
   }
 }
+
+//'172.30.11.254'
