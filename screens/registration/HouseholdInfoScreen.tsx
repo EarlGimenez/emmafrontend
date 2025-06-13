@@ -8,32 +8,45 @@ import { API_URLS } from "@/config/api"
 
 
 const HouseholdInfoScreen = ({ route, navigation }: any) => {
-  const YOUR_USER_ID_HERE = 1; // Replace with your actual user ID for testing
-  const { householdName, familyId: scannedFamilyId } = route.params
-  const [userId, setUserId] = useState(YOUR_USER_ID_HERE)
+  const { householdName, familyId: scannedFamilyId, userData } = route.params;
+  const [userId, setUserId] = useState(userData.userId)
   const [familyId, setFamilyId] = useState(scannedFamilyId) 
+
+  const [householdMembers, setHouseholdMembers] = useState<any[]>([]);
+  const [joined, setJoined] = useState(false);
 
   const handleJoinFamily = async () => {
     try {
-      const response = await fetcher(API_URLS.family.join, {
+      const payload = {
+        qrCode: familyId,
+        userId: userId
+      };
+
+      console.log('Submitting JSON:', JSON.stringify(payload));
+
+      const familyData = await fetcher(API_URLS.family.join, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          qrCode: familyId,
-          userId: userId
-        }),
+        body: JSON.stringify(payload),
       })
 
-      if (response.ok) {
-        const familyData = await response.json()
-        
-        // Navigate with the actual family data from the API
-        navigation.navigate("LocationDetails", {
-          householdName: familyData.familyName, // Use actual family name
-          householdMembers: familyData.members // Use actual member list
-        })
+      if (familyData.success) {
+        // Add the current user to the members list if not already present
+        let updatedMembers = familyData.members || [];
+        const alreadyMember = updatedMembers.some(
+          (member: any) => member.name === userData.fullName
+        );
+        if (!alreadyMember) {
+          updatedMembers = [
+            ...updatedMembers,
+            { name: userData.fullName, type: userData.accountType === "parent" ? "Parent/Guardian" : userData.accountType === "senior" ? "Senior Citizen" : "General User" }
+          ];
+        }
+        setHouseholdMembers(updatedMembers);
+        setJoined(true);
+        // Do NOT navigate yet!
       } else {
         console.error('Failed to join family')
         alert('Failed to join family. Please try again.')
@@ -55,30 +68,52 @@ const HouseholdInfoScreen = ({ route, navigation }: any) => {
         <View style={commonStyles.whiteContainer}>
           <Text style={commonStyles.title}>Household Information</Text>
 
-          <View style={styles.contentContainer}>
-            <Text style={styles.joinedText}>
-              You are now part of <Text style={styles.householdName}>{householdName}</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.joinedText}>
+            You are now part of <Text style={styles.householdName}>{householdName}</Text>
+          </Text>
+
+          <Text style={styles.membersTitle}>Household Members:</Text>
+
+          {joined ? (
+            householdMembers.length === 0 ? (
+              <Text style={{ textAlign: "center", color: colors.primary }}>
+                You are the first member of this household: {userData?.fullName}
+              </Text>
+            ) : (
+              householdMembers.map((member, index) => (
+                <View key={index} style={styles.memberItem}>
+                  <Text style={styles.memberType}>{member.type}:</Text>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                </View>
+              ))
+            )
+          ) : (
+            <Text style={{ textAlign: "center", color: colors.primary }}>
+              This household is currently empty.
             </Text>
+          )}
+        </View>
 
-            <Text style={styles.membersTitle}>Household Members:</Text>
-
-            {[
-              { type: "Parent/Guardian", name: "John Smith" },
-              { type: "Senior Citizen", name: "Mary Smith" },
-              { type: "General User", name: "Sarah Smith" }
-            ].map((member, index) => (
-              <View key={index} style={styles.memberItem}>
-                <Text style={styles.memberType}>{member.type}:</Text>
-                <Text style={styles.memberName}>{member.name}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={commonStyles.bottomButton}>
+        <View style={commonStyles.bottomButton}>
+          {!joined ? (
             <TouchableOpacity style={commonStyles.button} onPress={handleJoinFamily}>
               <Text style={commonStyles.buttonText}>Join Household</Text>
             </TouchableOpacity>
-          </View>
+          ) : (
+            <TouchableOpacity
+              style={commonStyles.button}
+              onPress={() =>
+                navigation.navigate("LocationDetails", {
+                  householdName,
+                  householdMembers,
+                })
+              }
+            >
+              <Text style={commonStyles.buttonText}>Continue</Text>
+            </TouchableOpacity>
+          )}
+            </View>
         </View>
       </View>
     </LinearGradient>

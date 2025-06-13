@@ -9,7 +9,8 @@ import { fetcher } from "@/utils/fetcher"
 
 const { width } = Dimensions.get("window")
 
-const HouseholdScanScreen = ({ navigation }: any) => {
+const HouseholdScanScreen = ({ navigation, route }: any) => {
+  const userData = route.params?.userData;
   const [isProcessing, setIsProcessing] = useState(false)
   const [debugMessage, setDebugMessage] = useState<string | null>(null)
   const [permission, requestPermission] = useCameraPermissions()
@@ -65,7 +66,8 @@ const handleBarCodeScanned = async ({ type, data }: { type: string; data: string
         setDebugMessage("Family found: " + familyData.familyName)
         navigation.navigate("HouseholdInfo", { 
           householdName: familyData.familyName,
-          familyId: familyId
+          familyId: familyId,
+          userData
         })
       } catch (apiError) {
         setError('Network error - Check your connection')

@@ -4,12 +4,15 @@ import { useState } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
+import { fetcher } from "@/utils/fetcher"
+import { API_URLS } from "@/config/api"
 
-const FinalRemindersScreen = ({ navigation }: any) => {
+const FinalRemindersScreen = ({ navigation, route }: any) => {
   const [consentSharing, setConsentSharing] = useState(false)
   const [consentAlerts, setConsentAlerts] = useState(false)
+  const { userData } = route.params // <-- get userData from params
 
-  const handleCompleteRegistration = () => {
+  const handleCompleteRegistration = async () => {
     if (consentSharing && consentAlerts) {
       const finalRegistrationData = {
         consentToSharing: consentSharing,
@@ -18,10 +21,16 @@ const FinalRemindersScreen = ({ navigation }: any) => {
         completionTimestamp: new Date().toISOString(),
       }
 
-      console.log("=== REGISTRATION COMPLETED ===")
-      console.log("Final registration data:", finalRegistrationData)
-      console.log("User has completed the full registration process")
-      console.log("================================")
+      try {
+        // Mark user as active in backend
+        await fetcher(API_URLS.users.complete(userData.userId), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+      } catch (error) {
+        Alert.alert("Error", "Failed to complete registration. Please try again.")
+        return
+      }
 
       Alert.alert(
         "Registration Complete",

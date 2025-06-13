@@ -4,6 +4,8 @@ import { useState } from "react"
 import { View, Text, TextInput, TouchableOpacity } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
+import { fetcher } from "@/utils/fetcher"
+import { API_URLS } from "@/config/api"
 
 const BasicInfoScreen = ({ navigation, route }: any) => {
   const { accountType } = route.params
@@ -12,7 +14,7 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
   const [contactNumber, setContactNumber] = useState("")
   const [emailAddress, setEmailAddress] = useState("")
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const userData = {
       accountType,
       fullName,
@@ -22,28 +24,39 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
       timestamp: new Date().toISOString(),
     }
 
-    console.log("Basic personal information collected:", userData)
+    try {
+      // Create temp user in backend
+      const response = await fetcher(API_URLS.users.temp, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
 
-    // Navigate to appropriate verification screen based on account type
-    switch (accountType) {
-      case "pwd":
-        console.log("Navigating to PWD verification")
-        navigation.navigate("PWDVerification", { userData })
-        break
-      case "senior":
-        console.log("Navigating to Senior verification")
-        navigation.navigate("SeniorVerification", { userData })
-        break
-      case "parent":
-      case "general":
-        console.log("Navigating to General verification")
-        navigation.navigate("GeneralVerification", { userData })
-        break
-      default:
-        console.log("Default navigation to General verification")
-        navigation.navigate("GeneralVerification", { userData })
+      if (response.success && response.userId) {
+        // Pass userId and userData to next screen
+        const userDataWithId = { ...userData, userId: response.userId };
+
+        switch (accountType) {
+          case "pwd":
+            navigation.navigate("PWDVerification", { userData: userDataWithId });
+            break;
+          case "senior":
+            navigation.navigate("SeniorVerification", { userData: userDataWithId });
+            break;
+          case "parent":
+          case "general":
+            navigation.navigate("GeneralVerification", { userData: userDataWithId });
+            break;
+          default:
+            navigation.navigate("GeneralVerification", { userData: userDataWithId });
+        }
+      } else {
+        alert("Failed to create user. Please try again.");
+      }
+    } catch (error) {
+      alert("Network error. Please try again." + error );
     }
-  }
+  };
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

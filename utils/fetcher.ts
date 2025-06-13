@@ -4,7 +4,7 @@ interface FetchOptions extends RequestInit {
 
 export const fetcher = async (url: string, options: FetchOptions = {}) => {
   const { params, ...fetchOptions } = options
-  
+
   const finalUrl = params
     ? `${url}?${new URLSearchParams(params)}`
     : url
@@ -17,7 +17,14 @@ export const fetcher = async (url: string, options: FetchOptions = {}) => {
     ...fetchOptions,
   })
 
-  const data = await response.json()
+  const text = await response.text()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch (e) {
+    console.error('Non-JSON response:', text)
+    throw new Error('Invalid JSON response from server')
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Network response was not ok')
