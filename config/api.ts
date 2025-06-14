@@ -19,7 +19,9 @@ export const API_URLS = {
   mapGeoCode: {
     geocode: `${BASE_URL}/geocode`,
     reverse_geocode: `${BASE_URL}/reverse-geocode`,
+    nearest: `${BASE_URL}/evacuation-centers/nearest`,
   }
+
 }
 
 //'172.30.11.254'

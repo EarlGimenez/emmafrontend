@@ -7,15 +7,46 @@ import { colors, commonStyles } from "../../styles/commonStyles"
 
 const { height } = Dimensions.get("window")
 
+interface Center {
+  id: number
+  name: string
+  description?: string
+  latitude: number
+  longitude: number
+  distance: number
+  time: string
+  category: string
+}
+
 const EvacuationDetailsScreen = ({ navigation, route }: any) => {
-  const { center } = route.params
+  const center: Center = route.params?.center
   const [showSuccess, setShowSuccess] = useState(false)
 
+  // Guard against undefined center
+  if (!center) {
+    return (
+      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+        <View style={commonStyles.container}>
+          <Text style={styles.errorText}>Error: No evacuation center data provided</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    )
+  }
+
   const handleSetPreferred = () => {
+    // Log with actual data from center
     console.log("Preferred evacuation center set:", {
+      centerId: center.id,
       centerName: center.name,
       distance: center.distance,
       estimatedTime: center.time,
+      coordinates: {
+        latitude: center.latitude,
+        longitude: center.longitude
+      },
       timestamp: new Date().toISOString(),
     })
 
@@ -35,19 +66,26 @@ const EvacuationDetailsScreen = ({ navigation, route }: any) => {
     return (
       <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
         <View style={styles.mapContainer}>
-          <Text style={styles.mapPlaceholder}>🗺️ Map View</Text>
+          <Text style={styles.mapPlaceholder}>
+            <Text>🗺️</Text> Map View
+          </Text>                
+          <Text style={styles.coordinates}>
+            ({center.latitude}, {center.longitude})
+          </Text>
         </View>
 
         <View style={styles.successContainer}>
           <View style={styles.successContent}>
             <Text style={styles.checkMark}>✓</Text>
-            <Text style={styles.successMessage}>Preferred center set</Text>
-
-            <View style={commonStyles.bottomButton}>
-              <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
-                <Text style={commonStyles.buttonText}>Next</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.successMessage}>
+              {center.name} has been set as your preferred evacuation center
+            </Text>
+            <TouchableOpacity 
+              style={[styles.preferredButton, { width: '100%' }]} 
+              onPress={handleNext}
+            >
+              <Text style={commonStyles.buttonText}>Continue to Account Setup</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
@@ -57,7 +95,12 @@ const EvacuationDetailsScreen = ({ navigation, route }: any) => {
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={styles.mapContainer}>
-        <Text style={styles.mapPlaceholder}>🗺️ Map with Route</Text>
+        <Text style={styles.mapPlaceholder}>
+          <Text>🗺️</Text> Map with Route
+        </Text>        
+        <Text style={styles.coordinates}>
+          ({center.latitude}, {center.longitude})
+        </Text>
       </View>
 
       <View style={styles.detailsContainer}>
@@ -69,29 +112,42 @@ const EvacuationDetailsScreen = ({ navigation, route }: any) => {
             <Text style={styles.detailValue}>{center.name}</Text>
           </View>
 
+          {center.description && (
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Description:</Text>
+              <Text style={styles.detailValue}>{center.description}</Text>
+            </View>
+          )}
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Location:</Text>
-            <Text style={styles.detailValue}>123 Center Street, City</Text>
+            <Text style={styles.detailValue}>
+              Lat: {center.latitude}
+              {'\n'}
+              Lng: {center.longitude}
+            </Text>
           </View>
 
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Distance:</Text>
-            <Text style={styles.detailValue}>{center.distance}</Text>
+            <Text style={styles.detailValue}>{center.distance.toFixed(1)} km</Text>
           </View>
 
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Estimated Time:</Text>
+            <Text style={styles.detailLabel}>Est. Time:</Text>
             <Text style={styles.detailValue}>{center.time}</Text>
           </View>
 
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Route:</Text>
-            <Text style={styles.detailValue}>Via Main Street → Center Ave</Text>
+            <Text style={styles.detailLabel}>Category:</Text>
+            <Text style={styles.detailValue}>{center.category}</Text>
           </View>
 
           <View style={styles.warningContainer}>
-            <Text style={styles.warningTitle}>⚠️ Warning</Text>
-            <Text style={styles.warningText}>
+              <Text style={styles.warningTitle}>
+                <Text>⚠️</Text> Warning
+              </Text>
+              <Text style={styles.warningText}>
               Real-time information about evacuation centers – including capacity, current occupancy, and operational
               status – will be available during a disaster.
             </Text>
@@ -113,6 +169,18 @@ const EvacuationDetailsScreen = ({ navigation, route }: any) => {
 }
 
 const styles = StyleSheet.create({
+  errorText: {
+    color: colors.white,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  coordinates: {
+    position: 'absolute',
+    bottom: 10,
+    color: colors.primary,
+    fontSize: 12,
+  },
   mapContainer: {
     height: height * 0.4,
     backgroundColor: "#e9ecef",
@@ -187,7 +255,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
     alignItems: "center",
-    maxHeight: 40,
+    maxHeight: 50,
     justifyContent: "center",
     flex: 1,
   },
@@ -201,7 +269,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
     alignItems: "center",
-    maxHeight: 40,
+    maxHeight: 50,
     justifyContent: "center",
     flex: 2,
   },
