@@ -8,22 +8,40 @@ import { fetcher } from "../../utils/fetcher"
 import { API_URLS } from "@/config/api"
 
 interface Center {
-  id: number
-  name: string
-  description?: string
-  latitude: number
-  longitude: number
-  distance: number  // in km, provided by backend
-  category: string
+    id: number
+    name: string
+    description?: string
+    latitude: number
+    longitude: number
+    distance: number  // in km, provided by backend
+    category: string
 }
 
-const EvacuationCenterScreen = ({ navigation, route }: any) => {
+interface Coordinates {
+    lat: number
+    lng: number
+}
+
+interface LocationData {
+    coordinates: Coordinates
+    address?: string
+}
+
+interface RouteParams {
+    locationData: LocationData
+}
+
+// Update the component definition to use the interfaces
+const EvacuationCenterScreen = ({ navigation, route }: { 
+    navigation: any, 
+    route: { params: RouteParams } 
+}) => {
   const [selectedCenter, setSelectedCenter] = useState<number | null>(null)
   const [centers, setCenters] = useState<Center[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-const { locationData } = route.params || {}
+  const { locationData } = route.params || {}
   const coordinates = locationData?.coordinates
 
 useEffect(() => {
@@ -81,15 +99,16 @@ useEffect(() => {
 
   const handleCenterSelect = (centerId: number) => {
     const center = centers.find(c => c.id === centerId)
-    console.log("Evacuation center selected:", {
-      centerId,
-      centerName: center?.name,
-      distance: center?.distance,
-      // estimatedTime: center?.time,
-      timestamp: new Date().toISOString()
+    
+    // Navigate with both center and user location data
+    navigation.navigate("EvacuationDetails", { 
+        center,
+        userLocation: {
+            latitude: coordinates.lat,
+            longitude: coordinates.lng
+        }
     })
-    navigation.navigate("EvacuationDetails", { center })
-  }
+}
 
   if (loading) {
     return (
