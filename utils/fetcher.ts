@@ -27,7 +27,7 @@ export const fetcher = async (url: string, options: FetchOptions = {}) => {
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Network response was not ok')
+    throw new Error('Network response was not ok')
   }
 
   return data

@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Platform } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
-import axios from "axios"
 import { WebView } from "react-native-webview"
 import { API_URLS } from "@/config/api"
+import { fetcher } from "../../utils/fetcher"
 
-const { width } = Dimensions.get("window")
+// const { width } = Dimensions.get("window")
 
 const LocationDetailsScreen = ({ navigation }: any) => {
   const [homeAddress, setHomeAddress] = useState("")
@@ -111,8 +111,7 @@ const LocationDetailsScreen = ({ navigation }: any) => {
     }
   }, [])
 
-  // Search for address when user submits
-  const handleAddressSearch = useCallback(async () => {
+ const handleAddressSearch = useCallback(async () => {
     if (!homeAddress.trim() || homeAddress === lastSearchRef.current) return;
     
     setIsSearching(true);
@@ -121,26 +120,27 @@ const LocationDetailsScreen = ({ navigation }: any) => {
     
     try {
       console.log("Searching for address:", homeAddress);
-      
-      const response = await axios.get(API_URLS.mapGeoCode.geocode, {
+
+      // Use fetcher instead of axios
+      const response = await fetcher(API_URLS.mapGeoCode.geocode, {
         params: { address: homeAddress }
       });
-      
-      console.log("Geocode response:", response.data);
-      
-      if (response.data.error) {
-        setError(response.data.error + (response.data.message ? `: ${response.data.message}` : ''));
+
+      console.log("Geocode response:", response);
+
+      if (response.error) {
+        setError(response.error + (response.message ? `: ${response.message}` : ''));
         return;
       }
-      
-      if (response.data && response.data.length > 0) {
-        const firstResult = response.data[0];
+
+      if (response && response.length > 0) {
+        const firstResult = response[0];
         const lat = parseFloat(firstResult.lat);
         const lng = parseFloat(firstResult.lon);
-        
+
         // Set flag to prevent reverse geocode
         isSettingFromMapRef.current = true;
-        
+
         // Update map location
         if (webViewRef.current) {
           webViewRef.current.injectJavaScript(`
@@ -148,9 +148,9 @@ const LocationDetailsScreen = ({ navigation }: any) => {
             true;
           `);
         }
-        
+
         setSelectedLocation({ lat, lng });
-        
+
         // UPDATE: Set the address to the full display name
         const displayName = firstResult.display_name || homeAddress;
         setHomeAddress(displayName);
@@ -160,29 +160,16 @@ const LocationDetailsScreen = ({ navigation }: any) => {
       }
     } catch (err: any) {
       console.error('Geocoding error:', err);
-      
+
       let errorMsg = "Error searching address";
-      
-      if (err.response) {
-        if (err.response.data && err.response.data.error) {
-          errorMsg = err.response.data.error;
-          if (err.response.data.message) {
-            errorMsg += `: ${err.response.data.message}`;
-          }
-        } else {
-          errorMsg = `Server error: ${err.response.status}`;
-        }
-      } else if (err.request) {
-        errorMsg = "Network error - server not responding";
-      } else {
-        errorMsg = err.message || "Error fetching address";
+      if (err.message) {
+        errorMsg = err.message;
       }
-      
       setError(errorMsg);
     } finally {
       setIsSearching(false);
     }
-  }, [homeAddress])
+  }, [homeAddress]);
 
   // Debounced search with proper cleanup
   useEffect(() => {
@@ -212,31 +199,30 @@ const LocationDetailsScreen = ({ navigation }: any) => {
     setError("");
 
     try {
-      const response = await axios.get(API_URLS.mapGeoCode.reverse_geocode, {
-        params: { lat, lng },
-        timeout: 10000,
+      // Use fetcher instead of axios
+      const response = await fetcher(API_URLS.mapGeoCode.reverse_geocode, {
+        params: { lat: String(lat), lng: String(lng) }
       });
-      
-      if (response.data.display_name) {
-        setHomeAddress(response.data.display_name);
-        lastSearchRef.current = response.data.display_name;
-      } else if (response.data.error) {
-        setError(response.data.error);
+
+      if (response.display_name) {
+        setHomeAddress(response.display_name);
+        lastSearchRef.current = response.display_name;
+      } else if (response.error) {
+        setError(response.error);
       } else {
         setError("Address not found");
       }
     } catch (err: any) {
-      if (err.response) {
-        setError(err.response.data?.error || `Server error: ${err.response.status}`);
-      } else if (err.request) {
-        setError("Network error - server not responding");
-      } else {
-        setError(err.message || "Error fetching address");
+      let errorMsg = "Error fetching address";
+      if (err.message) {
+        errorMsg = err.message;
       }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
 
   const handleConfirm = useCallback(() => {
     if (!selectedLocation || !homeAddress) return
