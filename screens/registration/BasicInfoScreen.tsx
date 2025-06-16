@@ -14,47 +14,47 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
   const [contactNumber, setContactNumber] = useState("")
   const [emailAddress, setEmailAddress] = useState("")
 
-  const handleNext = async () => {
-    const userData = {
-      accountType,
-      fullName,
-      dateOfBirth,
-      contactNumber,
-      emailAddress,
-      timestamp: new Date().toISOString(),
-    }
-
+   const handleNext = async () => {
     try {
-      // Create temp user in backend
       const response = await fetcher(API_URLS.users.temp, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          accountType,
+          fullName,
+          dateOfBirth,
+          contactNumber,
+          emailAddress
+        }),
       });
 
       if (response.success && response.userId) {
-        // Pass userId and userData to next screen
-        const userDataWithId = { ...userData, userId: response.userId };
+        const userDataWithId = {
+          userId: response.userId,
+          accountType,
+          fullName,
+          dateOfBirth,
+          contactNumber,
+          emailAddress,
+          verificationStatus: 'pending'
+        };
 
-        switch (accountType) {
-          case "pwd":
-            navigation.navigate("PWDVerification", { userData: userDataWithId });
-            break;
-          case "senior":
-            navigation.navigate("SeniorVerification", { userData: userDataWithId });
-            break;
-          case "parent":
-          case "general":
-            navigation.navigate("GeneralVerification", { userData: userDataWithId });
-            break;
-          default:
-            navigation.navigate("GeneralVerification", { userData: userDataWithId });
-        }
+        // Route to appropriate verification screen
+        const verificationRoutes = {
+          pwd: "PWDVerification",
+          senior: "SeniorVerification",
+          parent: "GeneralVerification",
+          general: "GeneralVerification"
+        };
+
+        const nextScreen = verificationRoutes[accountType as keyof typeof verificationRoutes] || "GeneralVerification";
+        navigation.navigate(nextScreen, { userData: userDataWithId });
       } else {
-        alert("Failed to create user. Please try again.");
+        throw new Error(response.message || 'Failed to create temporary user');
       }
-    } catch (error) {
-      alert("Network error. Please try again." + error );
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      alert(error.message || 'Network error. Please try again.');
     }
   };
 

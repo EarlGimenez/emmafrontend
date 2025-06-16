@@ -5,31 +5,25 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-nativ
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
-const AccountSetupScreen = ({ navigation }: any) => {
+const AccountSetupScreen = ({ navigation, route }: any) => {
   const [mobileNumber, setMobileNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
   const handleNext = () => {
-    const accountData = {
+  const updatedUserData = {
+    ...route.params?.userData,
+    account: {
       mobileNumber,
       email,
-      passwordSet: password ? true : false,
-      passwordsMatch: password === confirmPassword,
-      timestamp: new Date().toISOString(),
+      password: password,
+      timestamp: new Date().toISOString()
     }
+  };
 
-    console.log("Account setup data:", accountData)
-
-    // Validate passwords match, etc.
-    if (password !== confirmPassword) {
-      alert("Passwords do not match")
-      return
-    }
-
-    navigation.navigate("AccountSuccess")
-  }
+  navigation.navigate("FinalReminders", { userData: updatedUserData });
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

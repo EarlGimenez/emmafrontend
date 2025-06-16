@@ -9,6 +9,7 @@ import { colors, commonStyles } from "../../styles/commonStyles"
 
 const GeneralVerificationScreen = ({ navigation, route }: any) => {
   const { userData } = route.params
+  const [verificationStatus, setVerificationStatus] = useState("pending")
   const [primaryIdType, setPrimaryIdType] = useState("")
   const [secondaryIdType, setSecondaryIdType] = useState("")
   const [primaryImage, setPrimaryImage] = useState<string | null>(null)
@@ -33,22 +34,31 @@ const GeneralVerificationScreen = ({ navigation, route }: any) => {
     }
   }
 
-  const handleNext = () => {
-    const completeUserData = {
-      ...userData,
-      primaryIdType,
-      secondaryIdType,
-      primaryImage: primaryImage ? "Primary image uploaded" : "No primary image",
-      secondaryImage: secondaryImage ? "Secondary image uploaded" : "No secondary image",
-      verificationType: userData.accountType === "parent" ? "Parent/Guardian" : "General User",
-      timestamp: new Date().toISOString(),
+    const handleNext = () => {
+    if (!primaryIdType || !primaryImage) {
+      alert("Please upload at least a primary ID")
+      return
     }
 
-    console.log("Identity verification completed:", completeUserData)
+    const verifiedUserData = {
+      ...userData,
+      verificationDetails: {
+        primaryId: {
+          type: primaryIdType,
+          image: primaryImage
+        },
+        secondaryId: secondaryIdType ? {
+          type: secondaryIdType,
+          image: secondaryImage
+        } : undefined,
+        verificationStatus: "verified",
+        verifiedAt: new Date().toISOString()
+      }
+    }
 
-    navigation.navigate("AdditionalInfo", { userData: completeUserData })
+    navigation.navigate("AdditionalInfo", { userData: verifiedUserData })
   }
-
+  
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
       <View style={commonStyles.container}>

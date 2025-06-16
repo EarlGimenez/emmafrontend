@@ -33,54 +33,33 @@ const HouseholdScanScreen = ({ navigation, route }: any) => {
     checkAndStartScanning()
   }, [permission?.granted])
 
-const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
-    try {
-      if (isProcessing) {
-        setDebugMessage("Still processing previous scan...")
-        return
-      }
+const handleBarCodeScanned = async ({ data }: { data: string }) => {
+  if (isProcessing) return;
+  
+  setIsProcessing(true);
+  try {
+    const familyId = data.split('/').pop();
+    if (!familyId) throw new Error('Invalid QR code');
 
-      setIsProcessing(true)
-      setDebugMessage("QR Code detected: " + data)
+    const response = await fetcher(API_URLS.family.get(familyId));
+    
+    // Include familyId in userData
+    const updatedUserData = {
+      ...userData,
+      familyId: familyId
+    };
 
-      if (!data.includes('family')) {
-        setError('Invalid QR code format - Not a family QR code')
-        setDebugMessage("Invalid QR format")
-        setIsProcessing(false)
-        return
-      }
-
-      const familyId = data.split('/').pop()
-
-      if (!familyId) {
-        setError('Could not extract family ID from QR code')
-        setDebugMessage("No family ID found")
-        setIsProcessing(false)
-        return
-      }
-
-      setDebugMessage("Fetching family info...")
-      
-      try {
-        const familyData = await fetcher(API_URLS.family.get(familyId))
-        setDebugMessage("Family found: " + familyData.familyName)
-        navigation.navigate("HouseholdInfo", { 
-          householdName: familyData.familyName,
-          familyId: familyId,
-          userData
-        })
-      } catch (apiError) {
-        setError('Network error - Check your connection')
-        setDebugMessage("Network error: " + (apiError instanceof Error ? apiError.message : String(apiError)))
-      }
-
-    } catch (error) {
-      setError('Failed to process QR code')
-      setDebugMessage("Processing error: " + (error instanceof Error ? error.message : String(error)))
-    } finally {
-      setIsProcessing(false)
-    }
-}
+    navigation.navigate("HouseholdInfo", {
+      householdName: response.familyName,
+      familyId: familyId,
+      userData: updatedUserData
+    });
+  } catch (error) {
+    setError('Failed to process QR code');
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   const handleStartScan = async () => {
     if (!permission?.granted) {
@@ -94,8 +73,10 @@ const handleBarCodeScanned = async ({ type, data }: { type: string; data: string
   }
 
   const handleSkip = () => {
-    navigation.navigate("LocationDetails")
-  }
+  // Pass userData when skipping
+  navigation.navigate("LocationDetails", { userData: userData });
+};
+
 
   if (!permission) {
     return (

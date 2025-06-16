@@ -98,23 +98,21 @@ const PWDVerificationScreen = ({ navigation, route }: any) => {
   }
 
   const handleNext = () => {
-    if (verificationStatus === "success") {
-      const completeUserData = {
-        ...userData,
-        pwdIdNumber,
-        uploadedImage, // URI or "Image uploaded" message
-        verificationStatus: "completed",
-        verificationType: "PWD",
-        verificationTimestamp: new Date().toISOString(),
-        verificationResult: "success"
+  if (verificationStatus === "success") {
+    const verifiedUserData = {
+      ...userData,
+      verificationDetails: {
+        idType: pwdIdNumber ? 'PWD' : undefined,
+        idNumber: pwdIdNumber,
+        verificationImage: uploadedImage,
+        verifiedAt: new Date().toISOString(),
+        status: 'verified'
       }
+    };
 
-      console.log("PWD verification completed:", completeUserData)
-      navigation.navigate("AdditionalInfo", { userData: completeUserData })
-    } else {
-      verifyPWDId()
-    }
+    navigation.navigate("AdditionalInfo", { userData: verifiedUserData });
   }
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

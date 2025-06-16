@@ -8,10 +8,10 @@ import * as ImagePicker from "expo-image-picker"
 import { colors, commonStyles } from "../../styles/commonStyles"
 
 const ParentVerificationScreen = ({ navigation, route }: any) => {
-  const { parentData } = route.params
+const { userData } = route.params
+  const [verificationStatus, setVerificationStatus] = useState("pending")
   const [primaryIdType, setPrimaryIdType] = useState("")
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-
   const idTypes = ["Driver's License", "Passport", "National ID", "SSS ID", "PhilHealth ID", "TIN ID", "Voter's ID"]
 
   const handleImageUpload = async () => {
@@ -28,13 +28,27 @@ const ParentVerificationScreen = ({ navigation, route }: any) => {
   }
 
   const handleNext = () => {
-    const completeParentData = {
-      ...parentData,
-      primaryIdType,
-      uploadedImage,
+      if (!primaryIdType || !uploadedImage) {
+        alert("Please select an ID type and upload an image")
+        return
+      }
+
+      const verifiedUserData = {
+        ...userData,
+        verificationDetails: {
+          idType: primaryIdType,
+          verificationImage: uploadedImage,
+          verificationStatus: "verified",
+          verifiedAt: new Date().toISOString()
+        }
+      }
+
+      // For parent verification, we go to OTP screen first
+      navigation.navigate("OTP", { 
+        userData: verifiedUserData,
+        fromScreen: "ParentVerification"
+      })
     }
-    navigation.navigate("OTP", { parentData: completeParentData })
-  }
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

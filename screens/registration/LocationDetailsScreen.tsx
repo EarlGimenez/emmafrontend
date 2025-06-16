@@ -10,7 +10,7 @@ import { fetcher } from "../../utils/fetcher"
 
 // const { width } = Dimensions.get("window")
 
-const LocationDetailsScreen = ({ navigation }: any) => {
+const LocationDetailsScreen = ({ navigation, route }: any) => {
   const [homeAddress, setHomeAddress] = useState("")
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -224,18 +224,28 @@ const LocationDetailsScreen = ({ navigation }: any) => {
   }, []);
 
 
-  const handleConfirm = useCallback(() => {
-    if (!selectedLocation || !homeAddress) return
+const handleConfirm = useCallback(() => {
+  if (!selectedLocation || !homeAddress) return;
 
-    const locationData = {
-      homeAddress,
-      coordinates: selectedLocation,
-      timestamp: new Date().toISOString(),
+  // Update locationData structure to include address explicitly
+  const locationData = {
+    address: homeAddress,         // Changed from homeAddress to match backend expectations
+    coordinates: {
+      lat: selectedLocation.lat,  // Explicitly structure coordinates
+      lng: selectedLocation.lng
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  // Pass both locationData and existing userData
+  navigation.navigate("EvacuationCenter", { 
+    locationData,
+    userData: {
+      ...route.params?.userData,
+      locationDetails: locationData  // Add location to userData for final submission
     }
-
-    console.log("Location details confirmed:", locationData)
-    navigation.navigate("EvacuationCenter", { locationData })
-  }, [selectedLocation, homeAddress, navigation]);
+  });
+}, [selectedLocation, homeAddress, navigation, route.params?.userData]);
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

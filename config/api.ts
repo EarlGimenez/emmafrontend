@@ -1,5 +1,5 @@
 // Get the IP address from environment or use default
-const DEV_IP = '192.168.0.224' // Your development machine IP
+const DEV_IP = '172.30.11.254' // Your development machine IP
 const DEV_PORT = '8000'
 const PROD_URL = 'https://api.yourapp.com' // Future production URL
 

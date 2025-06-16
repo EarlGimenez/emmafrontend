@@ -12,23 +12,26 @@ const AdditionalInfoScreen = ({ navigation, route }: any) => {
   const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("")
   const [emergencyContactNumber, setEmergencyContactNumber] = useState("")
 
-  const handleNext = () => {
-    const completeUserData = {
-      ...userData,
+const handleNext = () => {
+  const updatedUserData = {
+    ...userData,
+    additionalInfo: {
       specificNeeds,
       emergencyContact: {
         name: emergencyContactName,
         relationship: emergencyContactRelationship,
         contactNumber: emergencyContactNumber,
-      },
-      timestamp: new Date().toISOString(),
+      }
     }
+  };
 
-    console.log("Additional user information collected:", completeUserData)
-
-    // Navigate to household scan instead of showing alert
-    navigation.navigate("HouseholdScan", { userData: completeUserData })
+  // Decide whether to go to household screens or location details
+  if (updatedUserData.accountType === 'parent' || updatedUserData.accountType === 'general') {
+    navigation.navigate("HouseholdScan", { userData: updatedUserData });
+  } else {
+    navigation.navigate("LocationDetails", { userData: updatedUserData });
   }
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

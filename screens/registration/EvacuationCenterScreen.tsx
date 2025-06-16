@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect  } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
@@ -27,15 +27,9 @@ interface LocationData {
     address?: string
 }
 
-interface RouteParams {
-    locationData: LocationData
-}
 
 // Update the component definition to use the interfaces
-const EvacuationCenterScreen = ({ navigation, route }: { 
-    navigation: any, 
-    route: { params: RouteParams } 
-}) => {
+const EvacuationCenterScreen = ({ navigation, route }: any) => {
   const [selectedCenter, setSelectedCenter] = useState<number | null>(null)
   const [centers, setCenters] = useState<Center[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,16 +53,23 @@ useEffect(() => {
             }
           })
 
-          if (response) {
+          if (response.error) {
+            setError(response.message)
+            return;
+          }
+
+          // Assuming response is directly the array of centers
+          if (Array.isArray(response)) {
             setCenters(response.map((center: any) => ({
               ...center,
               distance: center.distance,
               time: computeEstimatedTime(center.distance)
             })))
+          } else {
+            setError('Invalid response format')
           }
         }
 
-        // Set timeout for 5 seconds
         const timeoutId = setTimeout(() => {
           if (loading) {
             setError('Request took too long (5 seconds)')
@@ -76,20 +77,19 @@ useEffect(() => {
           }
         }, 5000)
 
-        fetchData().catch(error => {
-          setError(error.message)
-        }).finally(() => {
-          clearTimeout(timeoutId)
-          setLoading(false)
-        })
+        fetchData()
+          .catch(error => setError(error.message))
+          .finally(() => {
+            clearTimeout(timeoutId)
+            setLoading(false)
+          })
 
       } catch (error: any) {
         setError(error.message)
         setLoading(false)
       }
     }
-  }, [coordinates])
-  
+  }, [coordinates])    
   const computeEstimatedTime = (distanceKm: number): string => {
     const walkingSpeedKmph = 5  // 5 km/h (avg walking speed)
     const timeHours = distanceKm / walkingSpeedKmph
@@ -97,18 +97,18 @@ useEffect(() => {
     return `${timeMinutes} mins`
   }
 
-  const handleCenterSelect = (centerId: number) => {
-    const center = centers.find(c => c.id === centerId)
-    
-    // Navigate with both center and user location data
-    navigation.navigate("EvacuationDetails", { 
-        center,
-        userLocation: {
-            latitude: coordinates.lat,
-            longitude: coordinates.lng
-        }
-    })
-}
+const handleCenterSelect = (centerId: number) => {
+  const center = centers.find(c => c.id === centerId);
+  
+  navigation.navigate("EvacuationDetails", { 
+    center,
+    userLocation: {
+      latitude: coordinates.lat,
+      longitude: coordinates.lng
+    },
+    userData: route.params?.userData // Pass through the userData
+  });
+};
 
   if (loading) {
     return (

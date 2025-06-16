@@ -185,9 +185,20 @@ useEffect(() => {
   }
 
   const handleNext = () => {
-    console.log("Proceeding to account setup from evacuation center selection")
-    navigation.navigate("AccountSetup")
-  }
+  const updatedUserData = {
+    ...route.params?.userData,
+    preferredCenter: {
+      id: center.id,
+      name: center.name,
+      coordinates: {
+        latitude: center.latitude,
+        longitude: center.longitude
+      }
+    }
+  };
+
+  navigation.navigate("AccountSetup", { userData: updatedUserData });
+};
 
   const handleBack = () => {
     navigation.goBack()

@@ -10,45 +10,47 @@ import { API_URLS } from "@/config/api"
 const FinalRemindersScreen = ({ navigation, route }: any) => {
   const [consentSharing, setConsentSharing] = useState(false)
   const [consentAlerts, setConsentAlerts] = useState(false)
-  const { userData } = route.params // <-- get userData from params
+  const { userData } = route.params
 
-  const handleCompleteRegistration = async () => {
-    if (consentSharing && consentAlerts) {
-      const finalRegistrationData = {
-        consentToSharing: consentSharing,
-        consentToAlerts: consentAlerts,
-        registrationCompleted: true,
-        completionTimestamp: new Date().toISOString(),
+const handleCompleteRegistration = async () => {
+  if (consentSharing && consentAlerts) {
+    try {
+      const finalUserData = {
+        ...userData,
+        status: 'active', // Explicitly set status
+        consents: {
+          dataSharing: consentSharing,
+          alerts: consentAlerts,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      const response = await fetcher(API_URLS.users.complete(userData.userId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalUserData)
+      });
+
+      if (response.success) {
+        Alert.alert(
+          "Registration Complete",
+          "Thank you for completing your registration with E.M.M.A. You will now be redirected to the login screen.",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("Login"),
+            },
+          ],
+        );
+      } else {
+        throw new Error(response.message || 'Failed to complete registration');
       }
-
-      try {
-        // Mark user as active in backend
-        await fetcher(API_URLS.users.complete(userData.userId), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        })
-      } catch (error) {
-        Alert.alert("Error", "Failed to complete registration. Please try again.")
-        return
-      }
-
-      Alert.alert(
-        "Registration Complete",
-        "Thank you for completing your registration with E.M.M.A. You will now be redirected to the login screen.",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("Login"),
-          },
-        ],
-      )
-    } else {
-      console.log("Registration incomplete - missing consents:", {
-        consentSharing,
-        consentAlerts,
-      })
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to complete registration. Please try again.");
+      console.error('Registration error:', error);
     }
   }
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
@@ -59,48 +61,43 @@ const FinalRemindersScreen = ({ navigation, route }: any) => {
 
             <View style={styles.contentContainer}>
               <Text style={styles.thankYouText}>
-                Thank you for registering with E.M.M.A (Evacuation Management and Monitoring Assistant).
+                Thank you for completing your registration! Before you proceed, we’d like to remind you of our Data Privacy Notice and ask for your consent on the following:
               </Text>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Information Shared</Text>
                 <Text style={styles.sectionText}>
-                  The information you provided will be used to ensure your safety during emergency situations and to
-                  provide you with relevant evacuation guidance.
+                  Your personal information will be used to provide efficient disaster response services. We will only share your data with authorized government agencies and disaster response teams. You can review our full Data Privacy Notice [here].
                 </Text>
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Consent to Sharing with Agencies</Text>
+                <Text style={styles.sectionTitle}>Data Sharing Consent</Text>
                 <Text style={styles.sectionText}>
-                  Your information may be shared with relevant government agencies and emergency responders during
-                  disaster situations to ensure your safety and provide appropriate assistance.
+                  To ensure coordinated disaster response, we may share your information with the following: Local Government Units (LGUs), Department of Social Welfare and Development (DSWD), and other relevant government agencies and disaster response teams.
                 </Text>
 
                 <TouchableOpacity style={styles.checkboxContainer} onPress={() => setConsentSharing(!consentSharing)}>
                   <View style={[styles.checkbox, consentSharing && styles.checkboxChecked]} />
                   <Text style={styles.checkboxText}>
-                    I consent to sharing my information with relevant agencies during emergencies
+                    Yes, I consent to sharing my data with LGUs, DSWD, and other relevant agencies.
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Consent to Receiving Alerts and Notifications</Text>
+                <Text style={styles.sectionTitle}>Alerts and Notifications</Text>
                 <Text style={styles.sectionText}>
-                  You will receive important alerts, notifications, and updates about emergency situations, evacuation
-                  procedures, and safety information.
+                  To keep you informed during emergencies, we would like to send you alerts and notifications via SMS, email, or in-app messages.
                 </Text>
 
                 <TouchableOpacity style={styles.checkboxContainer} onPress={() => setConsentAlerts(!consentAlerts)}>
                   <View style={[styles.checkbox, consentAlerts && styles.checkboxChecked]} />
-                  <Text style={styles.checkboxText}>I consent to receiving emergency alerts and notifications</Text>
+                  <Text style={styles.checkboxText}>Yes, I consent to receiving emergency alerts and notifications.</Text>
                 </TouchableOpacity>
               </View>
 
               <Text style={styles.submitMessage}>
-                By clicking "Complete Registration", you acknowledge that you have read and understood all the
-                information provided and consent to the terms outlined above.
+                By clicking "Complete Registration", you confirm that you have read and agreed to the above consents.
               </Text>
             </View>
           </ScrollView>
@@ -128,55 +125,50 @@ const styles = StyleSheet.create({
   thankYouText: {
     fontSize: 16,
     color: colors.primary,
-    textAlign: "center",
-    marginBottom: 30,
-    fontWeight: "600",
+    marginBottom: 20,
+    lineHeight: 24,
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: colors.primary,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   sectionText: {
     fontSize: 14,
     color: "#333",
     lineHeight: 20,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 2,
     borderColor: colors.primary,
-    marginRight: 12,
+    marginRight: 8,
     borderRadius: 4,
-    marginTop: 2,
   },
   checkboxChecked: {
     backgroundColor: colors.primary,
   },
   checkboxText: {
     fontSize: 14,
-    color: "#333",
+    color: colors.primary,
     flex: 1,
-    lineHeight: 18,
   },
   submitMessage: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
-    fontStyle: "italic",
-    textAlign: "center",
-    marginTop: 20,
-    lineHeight: 16,
+    lineHeight: 18,
+    marginTop: 10,
   },
   disabledButton: {
     opacity: 0.5,

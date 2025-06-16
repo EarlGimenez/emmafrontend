@@ -3,32 +3,31 @@ interface FetchOptions extends RequestInit {
 }
 
 export const fetcher = async (url: string, options: FetchOptions = {}) => {
-  const { params, ...fetchOptions } = options
+  const { params, ...fetchOptions } = options;
 
   const finalUrl = params
     ? `${url}?${new URLSearchParams(params)}`
-    : url
+    : url;
 
-  const response = await fetch(finalUrl, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...fetchOptions,
-  })
-
-  const text = await response.text()
-  let data
   try {
-    data = JSON.parse(text)
-  } catch (e) {
-    console.error('Non-JSON response:', text)
-    throw new Error('Invalid JSON response from server')
-  }
+    const response = await fetch(finalUrl, {
+      headers: {
+        ...(fetchOptions.body ? { 'Content-Type': 'application/json' } : {}),
+        ...options.headers,
+      },
+      ...fetchOptions,
+    });
 
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
-  }
+    const jsonResponse = await response.json();
 
-  return data
-}
+    // Return the raw response data without wrapping it
+    return jsonResponse;
+
+  } catch (error: any) {
+    // Return a consistent error format
+    return {
+      error: true,
+      message: error.message || 'Network error'
+    };
+  }
+};
