@@ -23,15 +23,19 @@ import EvacuationDetailsScreen from "./screens/registration/EvacuationDetailsScr
 import AccountSetupScreen from "./screens/registration/AccountSetupScreen"
 import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
 import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
+// Assuming you have a Home/Dashboard screen for authenticated users
+import HomeScreen from "./screens/main/HomeScreen"
+
 
 const Stack = createStackNavigator()
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Loading" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Loading" component={LoadingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Navigator initialRouteName="Loading">
+        <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="DataPrivacy" component={DataPrivacyScreen} />
         <Stack.Screen name="AccountType" component={AccountTypeScreen} />
         <Stack.Screen name="BasicInfo" component={BasicInfoScreen} />

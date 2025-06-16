@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { View, Text, TextInput, TouchableOpacity } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
+import DateTimePicker from "@react-native-community/datetimepicker"
 import { colors, commonStyles } from "../../styles/commonStyles"
 import { fetcher } from "@/utils/fetcher"
 import { API_URLS } from "@/config/api"
@@ -24,7 +25,7 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
           fullName,
           dateOfBirth,
           contactNumber,
-          emailAddress
+          emailAddress,
         }),
       });
 
@@ -54,9 +55,17 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      // Log the full error object for debugging
+      console.error(error);
+      // If the backend returned a response, log it for debugging
+      if (error?.response) {
+        console.error('Backend response:', error.response);
+      }
       alert(error.message || 'Network error. Please try again.');
     }
   };
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
@@ -81,12 +90,34 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
 
             <View style={commonStyles.fieldContainer}>
               <Text style={commonStyles.fieldLabel}>Date of Birth</Text>
-              <TextInput
-                style={commonStyles.input}
-                placeholder="Date of Birth (MM/DD/YYYY)"
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
+              <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={commonStyles.input}
+              activeOpacity={0.8}
+              >
+              <Text>
+                {dateOfBirth ? dateOfBirth : "Date of Birth (MM/DD/YYYY)"}
+              </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+              <DateTimePicker
+                value={dateOfBirth ? new Date(dateOfBirth) : new Date()}
+                mode="date"
+                display="default"
+                maximumDate={new Date()}
+                onChange={(_, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) {
+                  // Format to YYYY-MM-DD for Laravel validator
+                  const year = selectedDate.getFullYear();
+                  const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                  const day = String(selectedDate.getDate()).padStart(2, '0');
+                  const formatted = `${year}-${month}-${day}`;
+                  setDateOfBirth(formatted);
+                }
+                }}
               />
+              )}
             </View>
 
             <View style={commonStyles.fieldContainer}>

@@ -1,23 +1,52 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors } from "../styles/commonStyles"
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../styles/commonStyles";
+import { fetcher } from "@/utils/fetcher"; // Import the updated fetcher
+import { API_URLS } from "@/config/api"; // Import API URLs
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
 const LoginScreen = ({ navigation }: any) => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
 
-  const handleLogin = () => {
-    // Handle login logic here
-    console.log("Login pressed")
-  }
+  const handleLogin = async () => {
+    setLoading(true); // Start loading
+    try {
+      const response = await fetcher(API_URLS.auth.login, {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.success && response.access_token && response.user) {
+        // Store token and user data
+        await AsyncStorage.setItem("userToken", response.access_token);
+        await AsyncStorage.setItem("userData", JSON.stringify(response.user));
+        
+        Alert.alert("Success", "Logged in successfully!");
+        // Navigate to your main application screen, e.g., 'Home' or 'Dashboard'
+        // Make sure 'Home' or similar is defined in your App.tsx navigation stack
+        navigation.replace("Home"); // Use replace to prevent going back to login screen
+      } else {
+        // This case might be hit if `response.ok` was true but `success` was false for some reason.
+        throw new Error(response.message || "Login failed. Please check your credentials.");
+      }
+    } catch (error: any) {
+      // fetcher already shows an Alert, just log here
+      console.error("Login error in component:", error.message);
+    } finally {
+      setLoading(false); // End loading
+    }
+  };
 
   const handleRegister = () => {
-    navigation.navigate("DataPrivacy")
-  }
+    // Navigate to the first step of your registration process, e.g., DataPrivacyScreen
+    navigation.navigate("DataPrivacy");
+  };
 
   return (
     <View style={styles.container}>
@@ -58,8 +87,8 @@ const LoginScreen = ({ navigation }: any) => {
           />
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Logging In..." : "Login"}</Text>
         </TouchableOpacity>
 
         <View style={styles.optionsContainer}>
@@ -87,8 +116,8 @@ const LoginScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -244,6 +273,6 @@ const styles = StyleSheet.create({
     left: 50,
     right: 40,
   },
-})
+});
 
-export default LoginScreen
+export default LoginScreen;

@@ -58,6 +58,8 @@ useEffect(() => {
             return;
           }
 
+          console.log("Evacuation centers response:", response)
+
           // Assuming response is directly the array of centers
           if (Array.isArray(response)) {
             setCenters(response.map((center: any) => ({

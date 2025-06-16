@@ -43,6 +43,7 @@ const handleCompleteRegistration = async () => {
           ],
         );
       } else {
+        console.log('Registration response:', response);
         throw new Error(response.message || 'Failed to complete registration');
       }
     } catch (error: any) {
