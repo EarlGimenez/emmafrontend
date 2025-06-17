@@ -1,5 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native"
 import { createStackNavigator } from "@react-navigation/stack"
+import { createDrawerNavigator } from '@react-navigation/drawer'; // Import createDrawerNavigator
+
 import LoadingScreen from "./screens/LoadingScreen"
 import LoginScreen from "./screens/LoginScreen"
 import DataPrivacyScreen from "./screens/registration/DataPrivacyScreen"
@@ -23,38 +25,64 @@ import EvacuationDetailsScreen from "./screens/registration/EvacuationDetailsScr
 import AccountSetupScreen from "./screens/registration/AccountSetupScreen"
 import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
 import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
-// Assuming you have a Home/Dashboard screen for authenticated users
-import HomeScreen from "./screens/main/HomeScreen"
-import { createDrawerNavigator } from "@react-navigation/drawer"
+import HomeScreen from "./screens/main/HomeScreen" // This will be the initial screen inside the Drawer Navigator
+import CustomDrawerContent from './components/screen_components/CustomDrawerContent'; // Import your custom drawer content
+import DataPrivacyConsentScreen from "./screens/volunteer/DataPrivacyConsentScreen"
+import VolunteerApplicationSubmittedScreen from "./screens/volunteer/VolunteerApplicationSubmittedScreen"
+import VolunteerBackgroundCheckScreen from "./screens/volunteer/VolunteerBackgroundCheckScreen"
+import VolunteerExperienceScreen from "./screens/volunteer/VolunteerExperienceScreen"
 
-const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator()
+const Drawer = createDrawerNavigator(); // Create a Drawer Navigator instance
 
+// Define the Drawer Navigator structure
+// This component encapsulates all screens that will live within the drawer
 function MainAppDrawer() {
   return (
     <Drawer.Navigator
-      // Uncomment and implement CustomDrawerContent if you have a custom drawer
-      // drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{ headerShown: false }}
+      // Use your custom drawer component for the sidebar content
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      // Hide the default header provided by Drawer Navigator, as HomeScreen manages its own header
+      screenOptions={{ headerShown: false }} 
     >
+      {/* HomeScreen is the first screen within the drawer.
+          When MainAppDrawer is navigated to, HomeScreen will be shown by default. */}
       <Drawer.Screen name="Home" component={HomeScreen} />
-      {/* Add other screens that should be accessible from the drawer here */}
-      {/* Example: <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
-      {/* Example: <Drawer.Screen name="Settings" component={SettingsScreen} /> */}
-      {/* You can also nest Stack Navigators inside Drawer Screens if needed */}
+      {/* Add other screens that should be accessible directly from the drawer here.
+          For example, if you had a "ProfileScreen" that also needed to open the drawer:
+          <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
     </Drawer.Navigator>
   );
 }
 
-const Stack = createStackNavigator()
-
+// Define the main Stack Navigator structure
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Loading">
-        <Stack.Screen name="MainAppDrawer" component={MainAppDrawer} options={{ headerShown: false }} />
-        <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Navigator 
+        // Set 'Loading' as the initial route for handling authentication checks first
+        initialRouteName="Loading"
+        // Globally hide stack headers, as individual screens or nested navigators will manage them
+        screenOptions={{ headerShown: false }} 
+      >
+        {/* Loading Screen: Handles initial auth checks and redirects */}
+        <Stack.Screen name="Loading" component={LoadingScreen} />
+        {/* Login Screen: User authentication */}
+        <Stack.Screen name="Login" component={LoginScreen} />
+        
+        {/* IMPORTANT: This is the key change.
+            The 'MainAppDrawer' (which is your entire drawer navigation setup,
+            including the HomeScreen) is now a screen within the main Stack Navigator.
+            
+            When a user successfully logs in, you should navigate to "MainAppDrawer".
+            This will render the Drawer Navigator, with HomeScreen as its initial screen.
+            From HomeScreen, the DrawerActions.openDrawer() will now work because
+            HomeScreen is a child of the Drawer Navigator.
+        */}
+        <Stack.Screen name="MainAppDrawer" component={MainAppDrawer} />
+
+        {/* The rest of your registration flow screens, which are typically
+            linear and don't involve the drawer, remain in the main Stack Navigator. */}
         <Stack.Screen name="DataPrivacy" component={DataPrivacyScreen} />
         <Stack.Screen name="AccountType" component={AccountTypeScreen} />
         <Stack.Screen name="BasicInfo" component={BasicInfoScreen} />
@@ -76,6 +104,11 @@ export default function App() {
         <Stack.Screen name="AccountSetup" component={AccountSetupScreen} />
         <Stack.Screen name="AccountSuccess" component={AccountSuccessScreen} />
         <Stack.Screen name="FinalReminders" component={FinalRemindersScreen} />
+
+        <Stack.Screen name="DataPrivacyConsent" component={DataPrivacyConsentScreen} />
+        <Stack.Screen name="VolunteerApplicationSubmitted" component={VolunteerApplicationSubmittedScreen} />
+        <Stack.Screen name="VolunteerBackgroundCheck" component={VolunteerBackgroundCheckScreen} />
+        <Stack.Screen name="VolunteerExperience" component={VolunteerExperienceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

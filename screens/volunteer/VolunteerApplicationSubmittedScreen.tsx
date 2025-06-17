@@ -30,13 +30,11 @@ export default function VolunteerApplicationSubmittedScreen() {
       // However, if the intention is to immediately log them into the main app (e.g., a "volunteer pending" dashboard),
       // then clearing tokens might not be desirable.
       // Given the previous conversation, we are redirecting to login to re-authenticate.
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData'); // Clear user data as well
       
       // Navigate directly to the MainAppDrawer, which should be configured in App.tsx
       // to handle the drawer navigation structure. This will ensure the drawer context is available.
       // Use replace to ensure the navigation stack is clean and prevents going back to the submission screen.
-      navigation.replace('Login'); // Changed to Login, and LoadingScreen will handle redirect to Home/Drawer
+      navigation.replace("MainAppDrawer"); 
 
 
     } catch (error: any) {
