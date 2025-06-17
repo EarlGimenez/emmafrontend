@@ -33,4 +33,5 @@ export const API_URLS = {
 //'172.30.11.254' -- Gimenez Laptop
 //'192.168.1.16'  -- Mansing Laptop
 //'192.168.0.224' -- Gimenez Desktop
-// '192.168.1.3'  -- Garcia Laptop
+// '192.168.1.3'  -- Garcia Desktop
+// '172.30.7.198' -- Garcia Laptop

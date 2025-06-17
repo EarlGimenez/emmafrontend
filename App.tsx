@@ -25,7 +25,25 @@ import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
 import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
 // Assuming you have a Home/Dashboard screen for authenticated users
 import HomeScreen from "./screens/main/HomeScreen"
+import { createDrawerNavigator } from "@react-navigation/drawer"
 
+const Drawer = createDrawerNavigator();
+
+function MainAppDrawer() {
+  return (
+    <Drawer.Navigator
+      // Uncomment and implement CustomDrawerContent if you have a custom drawer
+      // drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Drawer.Screen name="Home" component={HomeScreen} />
+      {/* Add other screens that should be accessible from the drawer here */}
+      {/* Example: <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
+      {/* Example: <Drawer.Screen name="Settings" component={SettingsScreen} /> */}
+      {/* You can also nest Stack Navigators inside Drawer Screens if needed */}
+    </Drawer.Navigator>
+  );
+}
 
 const Stack = createStackNavigator()
 
@@ -33,6 +51,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Loading">
+        <Stack.Screen name="MainAppDrawer" component={MainAppDrawer} options={{ headerShown: false }} />
         <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />

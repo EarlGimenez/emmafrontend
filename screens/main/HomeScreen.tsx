@@ -1,132 +1,296 @@
-// screens/HomeScreen.tsx (Create this file)
-
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetcher } from '@/utils/fetcher';
-import { API_URLS } from '@/config/api';
-import { colors, commonStyles } from '@/styles/commonStyles';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ImageBackground, Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import { fetcher } from '@/utils/fetcher'; // Import your fetcher
+import { API_URLS } from '@/config/api'; // Import your API_URLS
 
-const HomeScreen = ({ navigation }: any) => {
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export default function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const [trackingEnabled, setTrackingEnabled] = React.useState(false);
+  const [userData, setUserData] = useState<any>(null); // State to store user data
+  const [loadingUser, setLoadingUser] = useState(true); // Loading state for user data
 
+  // Fetch user data on component mount
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const loadUserData = async () => {
+      setLoadingUser(true);
       try {
-        // Fetch the authenticated user's profile from the backend
-        const response = await fetcher(API_URLS.users.profile);
-        if (response) {
-          setUserData(response);
+        // Try fetching from API first (ensures fresh data and authentication check)
+        const apiUserData = await fetcher(API_URLS.users.profile);
+        if (apiUserData) {
+          setUserData(apiUserData);
+          await AsyncStorage.setItem('userData', JSON.stringify(apiUserData)); // Update local storage
         }
-      } catch (error: any) {
-        console.error("Failed to fetch user profile:", error.message);
-        Alert.alert("Error", "Could not load user profile.");
+      } catch (apiError: any) {
+        console.error("HomeScreen: Failed to fetch user data from API:", apiError.message);
+        // If API fails, try loading from AsyncStorage as a fallback
+        try {
+          const storedUserData = await AsyncStorage.getItem('userData');
+          if (storedUserData) {
+            setUserData(JSON.parse(storedUserData));
+            console.log("HomeScreen: Loaded user data from AsyncStorage as fallback.");
+          } else {
+            console.warn("HomeScreen: No user data in API or AsyncStorage. Redirecting to Login.");
+            // If no data, force re-login (e.g., token expired or invalid)
+            await AsyncStorage.removeItem('userToken');
+            await AsyncStorage.removeItem('userData');
+            navigation.replace('Login');
+          }
+        } catch (storageError) {
+          console.error("HomeScreen: Error loading user data from AsyncStorage:", storageError);
+          // Still no data, redirect to login
+          navigation.replace('Login');
+        }
       } finally {
-        setLoading(false);
+        setLoadingUser(false);
       }
     };
 
-    fetchUserProfile();
+    loadUserData();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await fetcher(API_URLS.auth.logout, { method: 'POST' });
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
-      Alert.alert("Logged Out", "You have been successfully logged out.");
-      navigation.replace('Login'); // Go back to login screen
-    } catch (error: any) {
-      console.error("Logout failed:", error.message);
-      Alert.alert("Logout Error", "Failed to log out.");
-    }
+
+  const toggleTracking = () => setTrackingEnabled(previousState => !previousState);
+
+  const handleTrackFamilyMember = () => {
+    console.log('Track Family Member Pressed');
   };
 
-  if (loading) {
+  const handleJoinFamily = () => {
+    console.log('Join Family Pressed');
+  };
+
+  const handleDonateNow = () => {
+    console.log('Donate Now Pressed');
+  };
+
+  const handleRequestNeeds = () => {
+    console.log('Request Needs Pressed');
+  };
+
+  const handleVolunteerNow = () => {
+    navigation.navigate('DataPrivacyConsent');
+  };
+
+  // If user data is still loading, display a loading indicator
+  if (loadingUser) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading user data...</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Loading user profile...</Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
-      <View style={styles.container}>
-        <Text style={styles.welcomeText}>Welcome, {userData?.name || 'User'}!</Text>
-        <Text style={styles.emailText}>Email: {userData?.email}</Text>
-        <Text style={styles.statusText}>Status: {userData?.status}</Text>
-        {userData?.consents && (
-          <View style={styles.consentsContainer}>
-            <Text style={styles.consentTitle}>Consents:</Text>
-            <Text>Data Sharing: {userData.consents.dataSharing ? 'Yes' : 'No'}</Text>
-            <Text>Alerts: {userData.consents.alerts ? 'Yes' : 'No'}</Text>
-          </View>
-        )}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={commonStyles.buttonText}>Logout</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+          <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Home</Text>
+        {/* Display welcome message with user name if available */}
+        {userData && <Text style={styles.welcomeText}>Hello, {userData.name || 'User'}!</Text>}
       </View>
-    </LinearGradient>
+
+      {/* Main Content */}
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Tracking Status */}
+        <View style={styles.trackingStatusContainer}>
+          <Text style={styles.trackingStatusText}>Tracking Status</Text>
+          <View style={styles.trackingToggle}>
+            <Text style={styles.trackingLabel}>{trackingEnabled ? 'ON' : 'OFF'}</Text>
+            <Switch
+              onValueChange={toggleTracking}
+              value={trackingEnabled}
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={trackingEnabled ? "#f5dd4b" : "#f4f3f4"}
+            />
+            <Image
+              source={require('../../assets/images/qr.png')} // Replace with your image path
+              style={styles.gridIcon}
+            />
+          </View>
+        </View>
+
+        {/* Tracking Cards */}
+        <View style={styles.trackingCards}>
+          <TouchableOpacity style={styles.card} onPress={handleTrackFamilyMember}>
+            <Image
+              source={require('../../assets/images/pin-image.png')} // Replace with your image path
+              style={styles.cardImage2}
+            />
+            <Text style={styles.cardText}>Track Family Member</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.card} onPress={handleJoinFamily}>
+            <Image
+              source={require('../../assets/images/family-image.png')}
+              style={styles.cardImage}
+            />
+            <Text style={styles.cardText}>Join Family</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleDonateNow}>
+            <MaterialCommunityIcons name="hand-heart" size={24} color="#333" />
+            <Text style={styles.actionButtonText}>Donate Now</Text>
+            <Ionicons name="arrow-forward" size={20} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={handleRequestNeeds}>
+            <MaterialCommunityIcons name="medical-bag" size={24} color="#333" />
+            <Text style={styles.actionButtonText}>Request Needs</Text>
+            <Ionicons name="arrow-forward" size={20} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={handleVolunteerNow}>
+            <MaterialCommunityIcons name="account-group" size={24} color="#333" />
+            <Text style={styles.actionButtonText}>Volunteer Now</Text>
+            <Ionicons name="arrow-forward" size={20} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#34495e', // Dark blue background for consistency
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 20,
+    backgroundColor: '#34495e',
+    justifyContent: 'space-between', // Adjust to space out items
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 10, // Space from menu icon
   },
   welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: colors.white,
-  },
-  emailText: {
     fontSize: 16,
-    marginBottom: 5,
-    color: colors.white,
+    color: '#fff',
+    fontWeight: '600',
   },
-  statusText: {
-    fontSize: 16,
-    marginBottom: 20,
-    color: colors.white,
+  scrollViewContent: {
+    flexGrow: 1,
+    backgroundColor: '#f8f9fa', // Light grey background for content area
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    alignItems: 'center',
   },
-  consentsContainer: {
-    marginTop: 20,
+  trackingStatusContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 15,
     padding: 15,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    width: '80%',
-    alignItems: 'flex-start',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  consentTitle: {
+  trackingStatusText: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: colors.white,
+    color: '#333',
   },
-  logoutButton: {
-    marginTop: 30,
-    backgroundColor: colors.primary,
-    padding: 12,
+  trackingToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trackingLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#555',
+    marginRight: 8,
+  },
+  gridIcon: {
+    width: 25,
+    height: 25,
+    marginLeft: 8,
+  },
+  trackingCards: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: '#E0F2FF',
     borderRadius: 15,
-    alignItems: "center",
-    width: 200,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48%',
+    aspectRatio: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cardImage: {
+    width: 65,
+    height: 65,
+    marginTop: 10,
+  },
+  cardImage2: {
+    width: 48,
+    height: 65,
+    marginTop: 10,
+  },
+  cardText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  actionButtonsContainer: {
+    width: '100%',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  actionButtonText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 15,
   },
 });
-
-export default HomeScreen;

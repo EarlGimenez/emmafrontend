@@ -29,6 +29,8 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
         }),
       });
 
+      console.log('1Registration response:', response);
+
       if (response.success && response.userId) {
         const userDataWithId = {
           userId: response.userId,
@@ -51,12 +53,11 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
         const nextScreen = verificationRoutes[accountType as keyof typeof verificationRoutes] || "GeneralVerification";
         navigation.navigate(nextScreen, { userData: userDataWithId });
       } else {
+        console.log('in')
         throw new Error(response.message || 'Failed to create temporary user');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      // Log the full error object for debugging
-      console.error(error);
       // If the backend returned a response, log it for debugging
       if (error?.response) {
         console.error('Backend response:', error.response);
