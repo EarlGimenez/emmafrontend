@@ -15,47 +15,41 @@ const HouseholdInfoScreen = ({ route, navigation }: any) => {
   const [householdMembers, setHouseholdMembers] = useState<any[]>([]);
   const [joined, setJoined] = useState(false);
 
-  const handleJoinFamily = async () => {
-    try {
-      const payload = {
-        qrCode: familyId,
-        userId: userId
+const handleJoinFamily = async () => {
+  try {
+    const payload = {
+      qrCode: familyId,
+      userId: userId
+    };
+
+    const familyData = await fetcher(API_URLS.family.join, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (familyData.success) {
+      // Update userData with family info
+      const updatedUserData = {
+        ...userData,
+        familyId: familyId,
+        familyName: householdName,
+        familyMembers: familyData.members || []
       };
 
-      console.log('Submitting JSON:', JSON.stringify(payload));
-
-      const familyData = await fetcher(API_URLS.family.join, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (familyData.success) {
-        // Add the current user to the members list if not already present
-        let updatedMembers = familyData.members || [];
-        const alreadyMember = updatedMembers.some(
-          (member: any) => member.name === userData.fullName
-        );
-        if (!alreadyMember) {
-          updatedMembers = [
-            ...updatedMembers,
-            { name: userData.fullName, type: userData.accountType === "parent" ? "Parent/Guardian" : userData.accountType === "senior" ? "Senior Citizen" : "General User" }
-          ];
-        }
-        setHouseholdMembers(updatedMembers);
-        setJoined(true);
-        // Do NOT navigate yet!
-      } else {
-        console.error('Failed to join family')
-        alert('Failed to join family. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Connection error')
+      navigation.navigate("LocationDetails", {
+        userData: updatedUserData
+      });
+    } else {
+      alert('Failed to join family. Please try again.');
     }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Connection error');
   }
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>

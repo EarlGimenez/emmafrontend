@@ -21,5 +21,15 @@ export const API_URLS = {
   users: {
     temp: `${BASE_URL}/users/temp`,
     complete: (userId: number) => `${BASE_URL}/users/${userId}/complete`,
+  },
+  mapGeoCode: {
+    geocode: `${BASE_URL}/geocode`,
+    reverse_geocode: `${BASE_URL}/reverse-geocode`,
+    nearest: `${BASE_URL}/evacuation-centers/nearest`,
   }
+
 }
+
+//'172.30.11.254' -- Gimenez Laptop
+//'192.168.1.16'  -- Mansing Laptop
+//'192.168.0.224' -- Gimenez Desktop

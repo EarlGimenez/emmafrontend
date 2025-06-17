@@ -1,33 +1,133 @@
 "use client"
 
-import { useState } from "react"
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native"
+import { useState, useEffect  } from "react"
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors, commonStyles } from "../../styles/commonStyles"
+import { fetcher } from "../../utils/fetcher"
+import { API_URLS } from "@/config/api"
 
-const EvacuationCenterScreen = ({ navigation }: any) => {
-  const [selectedCenter, setSelectedCenter] = useState<string | null>(null)
+interface Center {
+    id: number
+    name: string
+    description?: string
+    latitude: number
+    longitude: number
+    distance: number  // in km, provided by backend
+    category: string
+}
 
-  const evacuationCenters = [
-    { id: "1", name: "City Sports Complex", distance: "2.5 km", time: "8 mins" },
-    { id: "2", name: "Community Center Hall", distance: "1.8 km", time: "6 mins" },
-    { id: "3", name: "Elementary School Gym", distance: "3.2 km", time: "12 mins" },
-    { id: "4", name: "Municipal Building", distance: "4.1 km", time: "15 mins" },
-  ]
+interface Coordinates {
+    lat: number
+    lng: number
+}
 
-  const handleCenterSelect = (centerId: string) => {
-    setSelectedCenter(centerId)
-    const center = evacuationCenters.find((c) => c.id === centerId)
+interface LocationData {
+    coordinates: Coordinates
+    address?: string
+}
 
-    console.log("Evacuation center selected:", {
-      centerId,
-      centerName: center?.name,
-      distance: center?.distance,
-      estimatedTime: center?.time,
-      timestamp: new Date().toISOString(),
-    })
 
-    navigation.navigate("EvacuationDetails", { center })
+// Update the component definition to use the interfaces
+const EvacuationCenterScreen = ({ navigation, route }: any) => {
+  const [selectedCenter, setSelectedCenter] = useState<number | null>(null)
+  const [centers, setCenters] = useState<Center[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const { locationData } = route.params || {}
+  const coordinates = locationData?.coordinates
+
+useEffect(() => {
+    if (coordinates) {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const fetchData = async () => {
+          const response = await fetcher(API_URLS.mapGeoCode.nearest, {
+            method: 'GET',
+            params: {
+              latitude: String(coordinates.lat),
+              longitude: String(coordinates.lng)
+            }
+          })
+
+          if (response.error) {
+            setError(response.message)
+            return;
+          }
+
+          // Assuming response is directly the array of centers
+          if (Array.isArray(response)) {
+            setCenters(response.map((center: any) => ({
+              ...center,
+              distance: center.distance,
+              time: computeEstimatedTime(center.distance)
+            })))
+          } else {
+            setError('Invalid response format')
+          }
+        }
+
+        const timeoutId = setTimeout(() => {
+          if (loading) {
+            setError('Request took too long (5 seconds)')
+            setLoading(false)
+          }
+        }, 5000)
+
+        fetchData()
+          .catch(error => setError(error.message))
+          .finally(() => {
+            clearTimeout(timeoutId)
+            setLoading(false)
+          })
+
+      } catch (error: any) {
+        setError(error.message)
+        setLoading(false)
+      }
+    }
+  }, [coordinates])    
+  const computeEstimatedTime = (distanceKm: number): string => {
+    const walkingSpeedKmph = 5  // 5 km/h (avg walking speed)
+    const timeHours = distanceKm / walkingSpeedKmph
+    const timeMinutes = Math.round(timeHours * 60)
+    return `${timeMinutes} mins`
+  }
+
+const handleCenterSelect = (centerId: number) => {
+  const center = centers.find(c => c.id === centerId);
+  
+  navigation.navigate("EvacuationDetails", { 
+    center,
+    userLocation: {
+      latitude: coordinates.lat,
+      longitude: coordinates.lng
+    },
+    userData: route.params?.userData // Pass through the userData
+  });
+};
+
+  if (loading) {
+    return (
+      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+        <View style={commonStyles.container}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </LinearGradient>
+    )
+  }
+
+  if (error) {
+    return (
+      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+        <View style={commonStyles.container}>
+          <Text>Error: {error}</Text>
+        </View>
+      </LinearGradient>
+    )
   }
 
   return (
@@ -43,14 +143,13 @@ const EvacuationCenterScreen = ({ navigation }: any) => {
 
             <View style={styles.contentContainer}>
               <Text style={styles.description}>
-                Evacuation center suggestions are based on factors like accessibility and proximity from the information
-                you provided.
+                Evacuation center suggestions are based on factors like accessibility and proximity from the information you provided.
                 {"\n\n"}
                 Select your preferred evacuation center and view details and routes.
               </Text>
 
               <View style={styles.centersList}>
-                {evacuationCenters.map((center) => (
+                {centers.map(center => (
                   <TouchableOpacity
                     key={center.id}
                     style={styles.centerButton}
@@ -59,8 +158,8 @@ const EvacuationCenterScreen = ({ navigation }: any) => {
                     <View style={styles.centerInfo}>
                       <Text style={styles.centerName}>{center.name}</Text>
                       <View style={styles.centerDetails}>
-                        <Text style={styles.centerDistance}>{center.distance}</Text>
-                        <Text style={styles.centerTime}>• {center.time}</Text>
+                        <Text style={styles.centerDistance}>{center.distance.toFixed(1)} km</Text>
+                        <Text style={styles.centerTime}>• {computeEstimatedTime(center.distance)}</Text>
                       </View>
                     </View>
                     <Text style={styles.centerArrow}>→</Text>

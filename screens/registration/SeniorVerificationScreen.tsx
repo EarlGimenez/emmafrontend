@@ -99,23 +99,21 @@ const SeniorVerificationScreen = ({ navigation, route }: any) => {
   }
 
   const handleNext = () => {
-    if (verificationStatus === "success") {
-      const completeUserData = {
-        ...userData,
-        seniorIdNumber,
-        uploadedImage, // URI or "Image uploaded" message
-        verificationStatus: "completed", 
-        verificationType: "Senior Citizen",
-        verificationTimestamp: new Date().toISOString(),
-        verificationResult: "success"
+  if (verificationStatus === "success") {
+    const verifiedUserData = {
+      ...userData,
+      verificationDetails: {
+        idType: seniorIdNumber ? 'Senior Citizen' : undefined,
+        idNumber: seniorIdNumber,
+        verificationImage: uploadedImage,
+        verifiedAt: new Date().toISOString(),
+        status: 'verified'
       }
+    };
 
-      console.log("Senior Citizen verification completed:", completeUserData)
-      navigation.navigate("AdditionalInfo", { userData: completeUserData })
-    } else {
-      verifySeniorId()
-    }
+    navigation.navigate("AdditionalInfo", { userData: verifiedUserData });
   }
+};
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
