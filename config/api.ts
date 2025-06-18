@@ -35,6 +35,10 @@ export const API_URLS = {
     process: `${BASE_URL}/donations/process`,
     recent: `${BASE_URL}/donations/recent`,
   },
+  requests: {
+    submit: `${BASE_URL}/requests/submit`,
+    myRequests: `${BASE_URL}/requests/my`,
+  },
 }
 
 //'172.30.11.254' -- Gimenez Laptop

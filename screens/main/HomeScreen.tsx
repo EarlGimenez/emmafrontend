@@ -98,8 +98,7 @@ export default function HomeScreen() {
   };
 
   const handleRequestNeeds = () => {
-    console.log('Request Needs Pressed');
-    // Implement navigation to a Request Needs screen
+    navigation.navigate('RequestEntry');
   };
 
   // This function now adapts based on volunteer status
