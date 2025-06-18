@@ -34,6 +34,7 @@ import VolunteerExperienceScreen from "./screens/volunteer/VolunteerExperienceSc
 import ProfileScreen from "./screens/main/ProfileScreen"
 import MyFamilyScreen from "./screens/main/MyFamilyScreen"
 import TrainingsScreen from "./screens/main/TrainingsScreen";
+import DonateScreen from "./screens/main/DonateScreen";
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator(); // Create a Drawer Navigator instance
@@ -115,6 +116,8 @@ export default function App() {
         <Stack.Screen name="VolunteerApplicationSubmitted" component={VolunteerApplicationSubmittedScreen} />
         <Stack.Screen name="VolunteerBackgroundCheck" component={VolunteerBackgroundCheckScreen} />
         <Stack.Screen name="VolunteerExperience" component={VolunteerExperienceScreen} />
+
+        <Stack.Screen name="Donate" component={DonateScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

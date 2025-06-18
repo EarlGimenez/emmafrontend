@@ -94,8 +94,7 @@ export default function HomeScreen() {
   };
 
   const handleDonateNow = () => {
-    console.log('Donate Now Pressed');
-    // Implement navigation to a Donation screen
+    navigation.navigate('Donate');
   };
 
   const handleRequestNeeds = () => {

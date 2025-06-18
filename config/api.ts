@@ -31,6 +31,10 @@ export const API_URLS = {
     index: `${BASE_URL}/trainings`, // For listing all trainings
     join: `${BASE_URL}/trainings/join`, // For joining a specific training
   },
+  donations: {
+    process: `${BASE_URL}/donations/process`,
+    recent: `${BASE_URL}/donations/recent`,
+  },
 }
 
 //'172.30.11.254' -- Gimenez Laptop
