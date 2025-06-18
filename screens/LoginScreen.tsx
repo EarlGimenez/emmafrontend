@@ -4,16 +4,18 @@ import { useState } from "react"
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors } from "../styles/commonStyles"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
 
-  const handleLogin = () => {
-    // Handle login logic here
-    console.log("Login pressed")
-  }
+  const handleLogin = async () => {
+    // Simulate authentication with userId 1
+    await AsyncStorage.setItem('userId', '1');
+    navigation.navigate("Landing");
+  };
 
   const handleRegister = () => {
     navigation.navigate("DataPrivacy")
