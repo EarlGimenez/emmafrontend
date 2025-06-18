@@ -3,79 +3,117 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, ImageBackground, Imag
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
-import { fetcher } from '@/utils/fetcher'; // Import your fetcher
-import { API_URLS } from '@/config/api'; // Import your API_URLS
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetcher } from '@/utils/fetcher';
+import { API_URLS } from '@/config/api';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const [trackingEnabled, setTrackingEnabled] = React.useState(false);
-  const [userData, setUserData] = useState<any>(null); // State to store user data
-  const [loadingUser, setLoadingUser] = useState(true); // Loading state for user data
+  const [trackingEnabled, setTrackingEnabled] = useState(false); // Existing tracking switch
+  const [userData, setUserData] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [isVolunteer, setIsVolunteer] = useState(false); // Volunteer status
+  const [isAvailableForTasks, setIsAvailableForTasks] = useState(false); // NEW: Volunteer availability status
 
-  // Fetch user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
       setLoadingUser(true);
       try {
-        // Try fetching from API first (ensures fresh data and authentication check)
         const apiUserData = await fetcher(API_URLS.users.profile);
-        if (apiUserData) {
+        if (apiUserData && !apiUserData.error) {
           setUserData(apiUserData);
-          await AsyncStorage.setItem('userData', JSON.stringify(apiUserData)); // Update local storage
-        }
-      } catch (apiError: any) {
-        console.error("HomeScreen: Failed to fetch user data from API:", apiError.message);
-        // If API fails, try loading from AsyncStorage as a fallback
-        try {
+          setIsVolunteer(apiUserData.account_type === 'volunteer');
+          // If the user object includes availability, initialize state from it
+          if (apiUserData.account_type === 'volunteer' && typeof apiUserData.is_available_for_tasks === 'boolean') {
+            setIsAvailableForTasks(apiUserData.is_available_for_tasks);
+          }
+          await AsyncStorage.setItem('userData', JSON.stringify(apiUserData));
+          console.log("HomeScreen: User data fetched successfully from API.");
+        } else {
+          console.warn("HomeScreen: Failed to fetch user data from API. Attempting AsyncStorage fallback.");
           const storedUserData = await AsyncStorage.getItem('userData');
           if (storedUserData) {
-            setUserData(JSON.parse(storedUserData));
+            const parsedData = JSON.parse(storedUserData);
+            setUserData(parsedData);
+            setIsVolunteer(parsedData.account_type === 'Volunteer');
+            if (parsedData.account_type === 'Volunteer' && typeof parsedData.is_available_for_tasks === 'boolean') {
+              setIsAvailableForTasks(parsedData.is_available_for_tasks);
+            }
             console.log("HomeScreen: Loaded user data from AsyncStorage as fallback.");
           } else {
             console.warn("HomeScreen: No user data in API or AsyncStorage. Redirecting to Login.");
-            // If no data, force re-login (e.g., token expired or invalid)
             await AsyncStorage.removeItem('userToken');
             await AsyncStorage.removeItem('userData');
             navigation.replace('Login');
           }
-        } catch (storageError) {
-          console.error("HomeScreen: Error loading user data from AsyncStorage:", storageError);
-          // Still no data, redirect to login
-          navigation.replace('Login');
         }
+      } catch (apiError: any) {
+        console.error("HomeScreen: Failed to fetch user data from API:", apiError.message);
       } finally {
         setLoadingUser(false);
       }
     };
 
-    loadUserData();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadUserData();
+    });
 
+    loadUserData();
+
+    return unsubscribe;
+  }, [navigation]);
 
   const toggleTracking = () => setTrackingEnabled(previousState => !previousState);
 
+  // NEW: Function to handle availability status toggle
+  const toggleAvailability = async () => {
+    const newAvailability = !isAvailableForTasks;
+    setIsAvailableForTasks(newAvailability); // Optimistic update
+    // You would typically send this update to your backend API here
+    try {
+      // Example API call (adjust URL and body as per your backend)
+      // await fetcher(API_URLS.users.updateAvailability, { // You'll need to define this API_URL
+      //   method: 'POST',
+      //   body: JSON.stringify({ is_available_for_tasks: newAvailability }),
+      // });
+      console.log(`Availability changed to: ${newAvailability ? 'Available' : 'Unavailable'}`);
+      Alert.alert("Status Updated", `You are now ${newAvailability ? 'available' : 'unavailable'} for tasks.`);
+    } catch (error) {
+      console.error("Failed to update availability:", error);
+      Alert.alert("Error", "Failed to update availability status. Please try again.");
+      setIsAvailableForTasks(!newAvailability); // Revert on error
+    }
+  };
+
   const handleTrackFamilyMember = () => {
-    console.log('Track Family Member Pressed');
+    navigation.navigate('MyFamily'); // Assuming 'MyFamily' handles this feature
   };
 
   const handleJoinFamily = () => {
-    console.log('Join Family Pressed');
+    navigation.navigate('MyFamily'); // Assuming 'MyFamily' handles this feature
   };
 
   const handleDonateNow = () => {
     console.log('Donate Now Pressed');
+    // Implement navigation to a Donation screen
   };
 
   const handleRequestNeeds = () => {
     console.log('Request Needs Pressed');
+    // Implement navigation to a Request Needs screen
   };
 
-  const handleVolunteerNow = () => {
-    navigation.navigate('DataPrivacyConsent');
+  // This function now adapts based on volunteer status
+  const handleVolunteerSpecificAction = () => {
+    if (isVolunteer) {
+      // If a volunteer, navigate to Current Tasks screen
+      navigation.navigate('CurrentTasks'); // You'll need to define 'CurrentTasks' in your App.tsx stack
+    } else {
+      // If not a volunteer, navigate to the application process
+      navigation.navigate('DataPrivacyConsent');
+    }
   };
 
-  // If user data is still loading, display a loading indicator
   if (loadingUser) {
     return (
       <View style={styles.loadingContainer}>
@@ -93,13 +131,30 @@ export default function HomeScreen() {
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Home</Text>
-        {/* Display welcome message with user name if available */}
         {userData && <Text style={styles.welcomeText}>Hello, {userData.name || 'User'}!</Text>}
       </View>
 
       {/* Main Content */}
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* Tracking Status */}
+        {/* NEW: Availability Status for Volunteers */}
+        {isVolunteer && (
+          <View style={styles.availabilityContainer}>
+            <Text style={styles.availabilityText}>Availability Status</Text>
+            <View style={styles.availabilityToggle}>
+              <Text style={styles.availabilityLabel}>
+                {isAvailableForTasks ? 'Available' : 'Unavailable'}
+              </Text>
+              <Switch
+                onValueChange={toggleAvailability}
+                value={isAvailableForTasks}
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={isAvailableForTasks ? "#f5dd4b" : "#f4f3f4"}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Tracking Status - Appears for both general users and volunteers */}
         <View style={styles.trackingStatusContainer}>
           <Text style={styles.trackingStatusText}>Tracking Status</Text>
           <View style={styles.trackingToggle}>
@@ -110,10 +165,7 @@ export default function HomeScreen() {
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               thumbColor={trackingEnabled ? "#f5dd4b" : "#f4f3f4"}
             />
-            <Image
-              source={require('../../assets/images/qr.png')} // Replace with your image path
-              style={styles.gridIcon}
-            />
+            <Ionicons name="grid" size={24} color="#333" style={styles.gridIcon} />
           </View>
         </View>
 
@@ -121,14 +173,14 @@ export default function HomeScreen() {
         <View style={styles.trackingCards}>
           <TouchableOpacity style={styles.card} onPress={handleTrackFamilyMember}>
             <Image
-              source={require('../../assets/images/pin-image.png')} // Replace with your image path
+              source={require('../../assets/images/pin-image.png')} // Replace with your family tracking image
               style={styles.cardImage2}
             />
-            <Text style={styles.cardText}>Track Family Member</Text>
+            <Text style={styles.cardText}>My Family</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.card} onPress={handleJoinFamily}>
             <Image
-              source={require('../../assets/images/family-image.png')}
+              source={require('../../assets/images/family-image.png')} // Placeholder
               style={styles.cardImage}
             />
             <Text style={styles.cardText}>Join Family</Text>
@@ -147,9 +199,12 @@ export default function HomeScreen() {
             <Text style={styles.actionButtonText}>Request Needs</Text>
             <Ionicons name="arrow-forward" size={20} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleVolunteerNow}>
+          {/* Volunteer-specific action button */}
+          <TouchableOpacity style={styles.actionButton} onPress={handleVolunteerSpecificAction}>
             <MaterialCommunityIcons name="account-group" size={24} color="#333" />
-            <Text style={styles.actionButtonText}>Volunteer Now</Text>
+            <Text style={styles.actionButtonText}>
+              {isVolunteer ? "Current Tasks" : "Volunteer Now"}
+            </Text>
             <Ionicons name="arrow-forward" size={20} color="#333" />
           </TouchableOpacity>
         </View>
@@ -167,7 +222,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#34495e', // Dark blue background for consistency
+    backgroundColor: '#34495e',
   },
   header: {
     flexDirection: 'row',
@@ -176,13 +231,13 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 20,
     backgroundColor: '#34495e',
-    justifyContent: 'space-between', // Adjust to space out items
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#fff',
-    marginLeft: 10, // Space from menu icon
+    marginLeft: 10,
   },
   welcomeText: {
     fontSize: 16,
@@ -191,12 +246,46 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    backgroundColor: '#f8f9fa', // Light grey background for content area
+    backgroundColor: '#f8f9fa',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
     alignItems: 'center',
   },
+  // NEW: Styles for Availability Status for Volunteers
+  availabilityContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#e6ffe6', // Light green background
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    borderColor: '#c3e6cb',
+    borderWidth: 1,
+  },
+  availabilityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#155724', // Dark green text
+  },
+  availabilityToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  availabilityLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#155724',
+    marginRight: 8,
+  },
+  // Existing styles below, ensuring consistency
   trackingStatusContainer: {
     width: '100%',
     flexDirection: 'row',
@@ -256,11 +345,13 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
     marginTop: 10,
+    resizeMode: 'contain',
   },
   cardImage2: {
     width: 48,
     height: 65,
     marginTop: 10,
+    resizeMode: 'contain',
   },
   cardText: {
     fontSize: 16,

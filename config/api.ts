@@ -20,14 +20,17 @@ export const API_URLS = {
   users: {
     temp: `${BASE_URL}/users/temp`, // If still using this flow
     complete: (userId: string | number) => `${BASE_URL}/users/${userId}/complete`,
-    profile: `${BASE_URL}/user`, // For fetching authenticated user profile
+    profile: `${BASE_URL}/profile`, // For fetching authenticated user profile
   },
   mapGeoCode: {
     geocode: `${BASE_URL}/geocode`,
     reverse_geocode: `${BASE_URL}/reverse-geocode`,
     nearest: `${BASE_URL}/evacuation-centers/nearest`,
-  }
-
+  },
+  trainings: {
+    index: `${BASE_URL}/trainings`, // For listing all trainings
+    join: `${BASE_URL}/trainings/join`, // For joining a specific training
+  },
 }
 
 //'172.30.11.254' -- Gimenez Laptop

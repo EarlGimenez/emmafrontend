@@ -21,7 +21,7 @@ export default function CustomDrawerContent(props: any) {
         const apiUserData = await fetcher(API_URLS.users.profile);
         if (apiUserData && !apiUserData.error) { // Check if the API response is successful
           setUserData(apiUserData);
-          setIsVolunteer(apiUserData.accountType === 'Volunteer' || apiUserData.status === 'volunteer_pending' || apiUserData.status === 'volunteer_active'); // Adjust based on your user object's role/status field
+          setIsVolunteer(apiUserData.account_type === 'Volunteer' || apiUserData.account_type === 'volunteer' || apiUserData.status === 'volunteer_pending' || apiUserData.status === 'volunteer_active'); // Adjust based on your user object's role/status field
           await AsyncStorage.setItem('userData', JSON.stringify(apiUserData)); // Cache in AsyncStorage
           console.log("CustomDrawerContent: User data fetched from API and stored.");
         } else {
