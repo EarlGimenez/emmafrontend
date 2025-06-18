@@ -21,139 +21,98 @@ import { getUserId } from "@/utils/storage";
 const { width, height } = Dimensions.get("window");
 
 const TrackFamilyScreen = ({ route, navigation }: any) => {
-  const [initialLoad, setInitialLoad] = useState(true);
-  const selectedMember = route.params?.selectedMember;
+  const [selectedMember, setSelectedMember] = useState<any>(route.params?.selectedMember || null);
   const [memberLocation, setMemberLocation] = useState<any>(null);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const mapRef = useRef<MapView>(null);
+  const currentFamilyRef = useRef<any>(null);
 
-  const animateMapToLocation = useCallback((location: any) => {
-    if (!location) return;
-    
-    const newRegion = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-      longitudeDelta: 0.01,
-      latitudeDelta: 0.01,
-    };
-    
-    // Always update marker position
-    setMemberLocation(location);
-    
-    // Schedule map animation
-    setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.animateToRegion(newRegion, 1000);
-      }
-    }, 50);
-  }, []);
-
-  useEffect(() => {
-const loadInitialData = async () => {
-    setIsLoading(true);
-    try {
-      if (selectedMember && selectedMember.locationSharingEnabled) {
-        const locationRes = await fetcher(
-          API_URLS.family.memberLocation(selectedMember.id)
-        );
-        if (locationRes.success && locationRes.location) {
-          const newLocation = {
-            latitude: parseFloat(locationRes.location.latitude),
-            longitude: parseFloat(locationRes.location.longitude),
-            timestamp: locationRes.location.last_location_update,
-          }
-          
-          animateMapToLocation(newLocation);
-          
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
-      setInitialLoad(false);
+  // Helper to fetch and center location
+  const fetchAndCenterLocation = useCallback(async (member: any) => {
+    if (!member || !member.locationSharingEnabled) {
+      setMemberLocation(null);
+      return;
     }
-  };
-
-  const handleMemberPress = async (member: any) => {
-    if (!member) return;
-
     try {
-      // Fetch and process new location...
-      if (member.locationSharingEnabled) {
-        const locationRes = await fetcher(
-          API_URLS.family.memberLocation(member.id)
-        );
-        
-        if (locationRes.success && locationRes.location) {
-          const newLocation = {
-            latitude: parseFloat(locationRes.location.latitude),
-            longitude: parseFloat(locationRes.location.longitude),
-            timestamp: locationRes.location.last_location_update,
-          };
-          
-          animateMapToLocation(newLocation);
-        }
-      }
-
-      // Update selected member params
-      navigation.setParams({
-        selectedMember: {
-          id: member.id,
-          name: member.name,
-          type: member.type,
-          locationSharingEnabled: member.locationSharingEnabled || false,
-        },
-      });
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      Alert.alert("Error", "Failed to fetch location");
-    }
-  };
-
-   loadInitialData();
-    const interval = setInterval(loadInitialData, 30000);
-    return () => clearInterval(interval);
-  }, [selectedMember, initialLoad]);
-
-  const handleMemberPress = async (member: any) => {
-  if (!member) {
-    Alert.alert("Error", "Member information not available");
-    return;
-  }
-
-  try {
-    if (member.locationSharingEnabled) {
-      const locationRes = await fetcher(
-        API_URLS.family.memberLocation(member.id)
-      );
-      
+      const locationRes = await fetcher(API_URLS.family.memberLocation(member.id));
       if (locationRes.success && locationRes.location) {
         const newLocation = {
           latitude: parseFloat(locationRes.location.latitude),
           longitude: parseFloat(locationRes.location.longitude),
           timestamp: locationRes.location.last_location_update,
         };
-        
-        animateMapToLocation(newLocation);
+        setMemberLocation(newLocation);
+        requestAnimationFrame(() => {
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude: newLocation.latitude,
+              longitude: newLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }, 1000);
+          }
+        });
+      } else {
+        setMemberLocation(null);
       }
+    } catch (error) {
+      setMemberLocation(null);
     }
+  }, []);
 
-    navigation.setParams({
-      selectedMember: {
-        id: member.id,
-        name: member.name,
-        type: member.type,
-        locationSharingEnabled: member.locationSharingEnabled || false,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching member location:", error);
-    Alert.alert("Error", "Failed to fetch member location");
-  }
-};
+  // Fetch family members and update selected member if needed
+  const loadFamilyData = useCallback(async (isFirstLoad = false) => {
+    if (isFirstLoad) setIsLoading(true);
+    try {
+      const userIdRaw = await getUserId();
+      const userId = userIdRaw ?? "";
+      const familyRes = await fetcher(API_URLS.family.current, { params: { userId } });
+      if (familyRes.success && familyRes.members) {
+        // Compare new members with ref to avoid unnecessary state updates
+        if (JSON.stringify(familyRes.members) !== JSON.stringify(currentFamilyRef.current)) {
+          setFamilyMembers(familyRes.members);
+          currentFamilyRef.current = familyRes.members;
+          let newSelected = selectedMember;
+          // Auto-select the current user if no member is selected
+          if (!selectedMember || !familyRes.members.some((m: { id: any; }) => m.id === selectedMember.id)) {
+            newSelected = familyRes.members.find((m: { id: { toString: () => string; }; }) => m.id.toString() === userId.toString()) || familyRes.members[0];
+            setSelectedMember(newSelected);
+          }
+          // Always fetch location for the selected member after updating
+          if (newSelected) {
+            await fetchAndCenterLocation(newSelected);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading family data:", error);
+    } finally {
+      if (isFirstLoad) setIsLoading(false);
+    }
+  }, [selectedMember, fetchAndCenterLocation]);
+
+  // Initial load and polling
+  useEffect(() => {
+    loadFamilyData(true);
+    const interval = setInterval(() => loadFamilyData(false), 30000);
+    return () => clearInterval(interval);
+  }, [loadFamilyData]);
+
+  // Fetch location when selected member changes (manual selection)
+  useEffect(() => {
+    if (selectedMember) {
+      fetchAndCenterLocation(selectedMember);
+    }
+  }, [selectedMember, fetchAndCenterLocation]);
+
+  // Handle member press
+  const handleMemberPress = async (member: any) => {
+    setSelectedMember(member);
+    navigation.setParams({ selectedMember: member });
+    await fetchAndCenterLocation(member);
+  };
 
   const handleMenu = () => {
     console.log("Menu pressed");
@@ -182,35 +141,24 @@ const loadInitialData = async () => {
       </View>
 
       <View style={styles.mapContainer}>
-        {(!isMapReady || isLoading) && (
+        {!isMapReady && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         )}
 
-      {memberLocation && (
-        <MapView
-          ref={mapRef}
-          style={[styles.map, !isMapReady && styles.hidden]}
-          initialRegion={{
-            latitude: memberLocation.latitude,
-            longitude: memberLocation.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          onMapReady={() => setIsMapReady(true)}
-          onLayout={() => {
-            // Force initial map position on first layout
-            if (memberLocation) {
-              mapRef.current?.animateToRegion({
-                latitude: memberLocation.latitude,
-                longitude: memberLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }, 100);
-            }
-          }}
-        >
+        {memberLocation ? (
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={{
+              latitude: memberLocation.latitude,
+              longitude: memberLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            onMapReady={() => setIsMapReady(true)}
+          >
 
             <Marker
               coordinate={{
@@ -223,27 +171,29 @@ const loadInitialData = async () => {
               ).toLocaleString()}`}
             />
           </MapView>
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <Text style={styles.mapText}>
+              {selectedMember?.locationSharingEnabled 
+                ? "Location unavailable" 
+                : "Sharing disabled"}
+            </Text>
+          </View>
         )}
       </View>
 
-      <View style={styles.mainWhiteContainer}>
+     <View style={styles.mainWhiteContainer}>
         <Text style={styles.familyListTitle}>Family Members</Text>
-        {isLoading ? (
-          <ActivityIndicator size="large" color={colors.primary} />
-        ) : (
-          <ScrollView
-            style={styles.membersList}
-            showsVerticalScrollIndicator={false}
-          >
-            {familyMembers.map((member) => (
-              <TouchableOpacity
-                key={member.id}
-                style={[
-                  styles.memberItem,
-                  selectedMember.id === member.id && styles.selectedMemberItem,
-                ]}
-                onPress={() => handleMemberPress(member)} // Use the handleMemberPress function
-              >
+        <ScrollView style={styles.membersList} showsVerticalScrollIndicator={false}>
+          {familyMembers.map((member) => (
+            <TouchableOpacity
+              key={member.id}
+              style={[
+                styles.memberItem,
+                selectedMember.id === member.id && styles.selectedMemberItem,
+              ]}
+              onPress={() => handleMemberPress(member)}
+            >
                 <View style={styles.avatarContainer}>
                   <Text style={styles.avatar}>{member.name?.[0] || "?"}</Text>
                 </View>
@@ -278,7 +228,6 @@ const loadInitialData = async () => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        )}
       </View>
     </LinearGradient>
   );

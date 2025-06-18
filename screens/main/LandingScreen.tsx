@@ -1,111 +1,214 @@
-"use client"
+"use client";
 
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors } from "../../styles/commonStyles"
-import { API_URLS } from "@/config/api"
-import { fetcher } from "@/utils/fetcher"
-import { getUserId } from "@/utils/storage"
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Alert,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../styles/commonStyles";
+import { API_URLS } from "@/config/api";
+import { fetcher } from "@/utils/fetcher";
+import { getUserId } from "@/utils/storage";
+import * as Location from "expo-location";
+import { useState } from "react";
+import {
+  startLocationUpdates,
+  stopLocationUpdates,
+} from "@/utils/locationTracking";
 
-const { width } = Dimensions.get("window")
+const { width } = Dimensions.get("window");
 
 const LandingScreen = ({ navigation }: any) => {
-const handleCheckFamily = async () => {
-  try {
-    const userId = await getUserId();
-    if (!userId) {
-      Alert.alert("Error", "User ID is required to check family status");
-      return;
-    }
+  const [locationSharingEnabled, setLocationSharingEnabled] = useState(false);
+  
+  const handleLocationSharingToggle = async () => {
+    try {
+      if (!locationSharingEnabled) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Denied",
+            "Location permission is required for location sharing"
+          );
+          return;
+        }
+        const { status: backgroundStatus } =
+          await Location.requestBackgroundPermissionsAsync();
+        if (backgroundStatus !== "granted") {
+          Alert.alert(
+            "Permission Denied",
+            "Background location permission is required for continuous location sharing"
+          );
+          return;
+        }
+      }
 
-    const response = await fetcher(API_URLS.family.current, {
-      params: { userId }
-    });
-    
-    if (response.success && response.familyName) {
-      navigation.navigate("MyFamily");
-    } else {
-      navigation.navigate("CheckFamily");
+      const userId = await getUserId();
+      if (!userId) {
+        Alert.alert("Error", "User ID not found");
+        return;
+      }
+
+      const response = await fetcher(
+        API_URLS.family.toggleLocation(Number(userId)),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locationSharingEnabled: !locationSharingEnabled,
+          }),
+        }
+      );
+
+      if (response.success) {
+        setLocationSharingEnabled(!locationSharingEnabled);
+        if (!locationSharingEnabled) {
+          startLocationUpdates();
+        } else {
+          stopLocationUpdates();
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling location sharing:", error);
+      Alert.alert("Error", "Failed to toggle location sharing");
     }
-  } catch (error) {
-    console.error('Error checking family status:', error);
-    Alert.alert("Error", "Failed to check family status");
-  }
-};
+  };
+  const handleCheckFamily = async () => {
+    try {
+      const userId = await getUserId();
+      if (!userId) {
+        Alert.alert("Error", "User ID is required to check family status");
+        return;
+      }
+
+      const response = await fetcher(API_URLS.family.current, {
+        params: { userId },
+      });
+
+      if (response.success && response.familyName) {
+        navigation.navigate("MyFamily");
+      } else {
+        navigation.navigate("CheckFamily");
+      }
+    } catch (error) {
+      console.error("Error checking family status:", error);
+      Alert.alert("Error", "Failed to check family status");
+    }
+  };
 
   const handleCheckEvacuationCenter = () => {
-    console.log("Check Evacuation Center pressed - placeholder")
-  }
+    console.log("Check Evacuation Center pressed - placeholder");
+  };
 
   const handleTrackFamilyMember = async () => {
-  try {
-    const userId = await getUserId();
-    if (!userId) {
-      Alert.alert("Error", "User ID not found");
-      return;
-    }
-
-    // Get current user's family info
-    const response = await fetcher(API_URLS.family.current, {
-      params: { userId }
-    });
-
-    if (!response.success) {
-      Alert.alert("Error", "Please join a family first");
-      return;
-    }
-
-    // Find current user in family members
-    const currentMember = response.members?.find((member: any) => member.id.toString() === userId.toString());
-    
-    if (!currentMember) {
-      Alert.alert("Error", "Could not find your family member info");
-      return;
-    }
-
-    navigation.navigate("TrackFamily", {
-      selectedMember: {
-        id: currentMember.id,
-        name: currentMember.name,
-        type: currentMember.type,
-        locationSharingEnabled: currentMember.locationSharingEnabled || false
+    try {
+      const userId = await getUserId();
+      if (!userId) {
+        Alert.alert("Error", "User ID not found");
+        return;
       }
-    });
-  } catch (error) {
-    console.error("Error preparing track family screen:", error);
-    Alert.alert("Error", "Failed to load family tracking");
-  }
-};
+
+      // Get current user's family info
+      const response = await fetcher(API_URLS.family.current, {
+        params: { userId },
+      });
+
+      if (!response.success) {
+        Alert.alert("Error", "Please join a family first");
+        return;
+      }
+
+      // Find current user in family members
+      const currentMember = response.members?.find(
+        (member: any) => member.id.toString() === userId.toString()
+      );
+
+      if (!currentMember) {
+        Alert.alert("Error", "Could not find your family member info");
+        return;
+      }
+
+      navigation.navigate("TrackFamily", {
+        selectedMember: {
+          id: currentMember.id,
+          name: currentMember.name,
+          type: currentMember.type,
+          locationSharingEnabled: currentMember.locationSharingEnabled || false,
+        },
+      });
+    } catch (error) {
+      console.error("Error preparing track family screen:", error);
+      Alert.alert("Error", "Failed to load family tracking");
+    }
+  };
 
   const handleScanQR = () => {
-    console.log("Scan QR pressed - placeholder")
-  }
+    console.log("Scan QR pressed - placeholder");
+  };
 
   const handleNotifications = () => {
-    console.log("Notifications pressed")
-  }
+    console.log("Notifications pressed");
+  };
 
   const handleMenu = () => {
-    console.log("Menu pressed")
-  }
+    console.log("Menu pressed");
+  };
 
   return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.notificationButton} onPress={handleNotifications}>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={handleNotifications}
+        >
           <Text style={styles.notificationIcon}>🔔</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.mainWhiteContainer}>
         <View style={styles.content}>
+          <View style={{ margin: 20 }}>
+            <TouchableOpacity
+              style={[
+                styles.mainButton,
+                {
+                  backgroundColor: locationSharingEnabled
+                    ? colors.secondary
+                    : colors.primary,
+                },
+              ]}
+              onPress={handleLocationSharingToggle}
+            >
+              <Text
+                style={{
+                  color: colors.white,
+                  fontWeight: "bold",
+                  fontSize: 16,
+                }}
+              >
+                {locationSharingEnabled
+                  ? "Stop Sharing Location"
+                  : "Start Sharing Location"}
+              </Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.gridContainer}>
             <View style={styles.gridRow}>
-              <TouchableOpacity style={styles.mainButton} onPress={handleCheckFamily}>
+              <TouchableOpacity
+                style={styles.mainButton}
+                onPress={handleCheckFamily}
+              >
                 <View style={styles.mainButtonContent}>
                   <Text style={styles.mainButtonText}>Check Family</Text>
                   <View style={styles.familyIconContainer}>
@@ -114,7 +217,10 @@ const handleCheckFamily = async () => {
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.mainButton} onPress={handleScanQR}>
+              <TouchableOpacity
+                style={styles.mainButton}
+                onPress={handleScanQR}
+              >
                 <View style={styles.mainButtonContent}>
                   <Text style={styles.mainButtonText}>Scan QR</Text>
                   <View style={styles.familyIconContainer}>
@@ -125,16 +231,24 @@ const handleCheckFamily = async () => {
             </View>
 
             <View style={styles.gridRow}>
-              <TouchableOpacity style={styles.mainButton} onPress={handleCheckEvacuationCenter}>
+              <TouchableOpacity
+                style={styles.mainButton}
+                onPress={handleCheckEvacuationCenter}
+              >
                 <View style={styles.mainButtonContent}>
-                  <Text style={styles.mainButtonText}>Check Evacuation Center</Text>
+                  <Text style={styles.mainButtonText}>
+                    Check Evacuation Center
+                  </Text>
                   <View style={styles.familyIconContainer}>
                     <Text style={styles.familyIcon}>🏢</Text>
                   </View>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.mainButton} onPress={handleTrackFamilyMember}>
+              <TouchableOpacity
+                style={styles.mainButton}
+                onPress={handleTrackFamilyMember}
+              >
                 <View style={styles.mainButtonContent}>
                   <Text style={styles.mainButtonText}>Track Family Member</Text>
                   <View style={styles.familyIconContainer}>
@@ -147,8 +261,8 @@ const handleCheckFamily = async () => {
         </View>
       </View>
     </LinearGradient>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -230,6 +344,6 @@ const styles = StyleSheet.create({
   familyIcon: {
     fontSize: 40,
   },
-})
+});
 
-export default LandingScreen
+export default LandingScreen;

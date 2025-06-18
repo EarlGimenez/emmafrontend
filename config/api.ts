@@ -13,8 +13,7 @@ const BASE_URL = __DEV__
   ? `http://${DEV_IP}:${DEV_PORT}/api`
   : PROD_URL
 
-export const API_URLS = {
-  family: {
+export const API_URLS = {  family: {
     current: `${BASE_URL}/family/current`,
     get: (id: string) => `${BASE_URL}/family/${id}`,
     join: `${BASE_URL}/join-family`,
@@ -24,6 +23,7 @@ export const API_URLS = {
     qrcode: (familyId: number) => `${BASE_URL}/family/qr-code/${familyId}`,
     create: `${BASE_URL}/family/create`,
     uploadQR: `${BASE_URL}/family/upload-qr`,
+    toggleLocation: (memberId: number) => `${BASE_URL}/family/member/${memberId}/location/toggle`,
   },
   users: {
     current: `${BASE_URL}/users/current`,
