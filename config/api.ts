@@ -5,7 +5,7 @@ const GIMENEZ_LAPTOP_IP = '172.30.11.254'
 
 
 // Define the API URLs for development and production environments
-const DEV_IP = GIMENEZ_DESKTOP_IP // Your development machine IP
+const DEV_IP = GIMENEZ_LAPTOP_IP // Your development machine IP
 const DEV_PORT = '8000'
 const PROD_URL = 'https://api.yourapp.com' // Future production URL
 
@@ -15,10 +15,17 @@ const BASE_URL = __DEV__
 
 export const API_URLS = {
   family: {
+    current: `${BASE_URL}/family/current`,
     get: (id: string) => `${BASE_URL}/family/${id}`,
     join: `${BASE_URL}/join-family`,
+    joinByCode: `${BASE_URL}/family/join-by-code`,
+    leave: `${BASE_URL}/family/leave`,
+    memberLocation: (memberId: number) => `${BASE_URL}/family/member/${memberId}/location`,  
+    qrcode: (familyId: number) => `${BASE_URL}/family/qr-code/${familyId}`,
+    create: `${BASE_URL}/family/create`,
   },
   users: {
+    current: `${BASE_URL}/users/current`,
     temp: `${BASE_URL}/users/temp`,
     complete: (userId: number) => `${BASE_URL}/users/${userId}/complete`,
   },

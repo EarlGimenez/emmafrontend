@@ -23,6 +23,11 @@ import EvacuationDetailsScreen from "./screens/registration/EvacuationDetailsScr
 import AccountSetupScreen from "./screens/registration/AccountSetupScreen"
 import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
 import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
+import LandingScreen from "./screens/main/LandingScreen"
+import CheckFamilyScreen from "./screens/main/CheckFamilyScreen"
+import CreateFamilyScreen from "./screens/main/CreateFamilyScreen"
+import MyFamilyScreen from "./screens/main/MyFamilyScreen"
+import TrackFamilyScreen from "./screens/main/TrackFamilyScreen"
 
 const Stack = createStackNavigator()
 
@@ -53,6 +58,11 @@ export default function App() {
         <Stack.Screen name="AccountSetup" component={AccountSetupScreen} />
         <Stack.Screen name="AccountSuccess" component={AccountSuccessScreen} />
         <Stack.Screen name="FinalReminders" component={FinalRemindersScreen} />
+        <Stack.Screen name="Landing" component={LandingScreen} />
+        <Stack.Screen name="CheckFamily" component={CheckFamilyScreen} />
+        <Stack.Screen name="CreateFamily" component={CreateFamilyScreen} />
+        <Stack.Screen name="MyFamily" component={MyFamilyScreen} />
+        <Stack.Screen name="TrackFamily" component={TrackFamilyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )
