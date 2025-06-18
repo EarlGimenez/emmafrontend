@@ -1,28 +1,59 @@
-"use client"
-
-import * as Sharing from 'expo-sharing';
-import QRCode from 'react-native-qrcode-svg';
-import { useState, useEffect } from "react"
-import { fetcher } from "@/utils/fetcher"
-import { API_URLS } from "@/config/api"
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors } from "../../styles/commonStyles"
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
+import * as Clipboard from 'expo-clipboard';
+import * as Location from 'expo-location';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState, useEffect } from "react";
+import { fetcher } from "@/utils/fetcher";
+import { API_URLS } from "@/config/api";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../styles/commonStyles";
 
 const MyFamilyScreen = ({ navigation }: any) => {
   const [familyData, setFamilyData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  let qrRef: any;
+  const [qrReady, setQrReady] = useState(false);
+  const [isCodeVisible, setIsCodeVisible] = useState(false);
+  
+  const getUserId = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) {
+        throw new Error("User ID not found in storage");
+      }
+      return userId;
+    } catch (error) {
+      console.error("Error retrieving userId:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const fetchFamilyData = async () => {
       try {
-        const response = await fetcher(API_URLS.family.current);
+        const userId = await getUserId();
+        if (!userId) {
+          Alert.alert("Error", "User ID is required to check family status");
+          return;
+        }
+
+        const response = await fetcher(API_URLS.family.current, {
+          method: "GET",
+          params: { userId }, // Pass userId as a query parameter
+        });
         if (response.success) {
           setFamilyData(response);
         }
       } catch (error) {
-        console.error('Error fetching family:', error);
+        console.error("Error fetching family:", error);
       } finally {
         setLoading(false);
       }
@@ -30,122 +61,168 @@ const MyFamilyScreen = ({ navigation }: any) => {
 
     fetchFamilyData();
   }, []);
-  
+
   const handleMemberPress = (member: any) => {
-    console.log("Family member pressed:", member.name)
-    navigation.navigate("TrackFamily", { selectedMember: member })
-  }
+    console.log("Family member pressed:", member.name);
+    navigation.navigate("TrackFamily", { selectedMember: member });
+  };
 
   const handleShareQR = async () => {
-    try {
-      if (!familyData?.id) {
-        throw new Error('Family ID not found');
-      }
+  try {
+    console.log("Sharing QR code...");
+    if (!familyData?.id) {
+      throw new Error("Family ID not found");
+    }
 
-      const response = await fetcher(API_URLS.family.qrcode(familyData.id), {
-        method: 'GET'
+    // Get QR code data from backend
+    const qrResponse = await fetcher(API_URLS.family.qrcode(familyData.id));
+    if (!qrResponse.success || !qrResponse.qrData) {
+      throw new Error("Failed to get QR code data from server");
+    }
+
+    // Create a temporary file with the QR data
+    const fileUri = `${FileSystem.cacheDirectory}family-qr.png`;
+    await FileSystem.writeAsStringAsync(fileUri, qrResponse.qrData, {
+      encoding: FileSystem.EncodingType.Base64
+    });
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri, {
+        dialogTitle: "Share Family QR Code",
+        mimeType: "image/png",
       });
-      
-      if (response && response.qrData) {
-        let base64QR;
-        qrRef?.toDataURL(async (dataURL: string) => {
-          base64QR = dataURL;
-          
-          if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(base64QR, {
-              mimeType: 'image/png',
-              dialogTitle: 'Share Family QR Code'
-            });
-          }
-        });
-      } else {
-        throw new Error('Failed to generate QR code');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to share QR code');
+    } else {
+      Alert.alert("Sharing not available", "Your device does not support sharing");
     }
-  };
+  } catch (error: any) {
+    console.error("Error during QR code sharing:", error);
+    Alert.alert("Error", error.message || "Failed to share QR code");
+  }
+};
 
-   const handleShareFamilyCode = async () => {
-    try {
-      if (!familyData?.joinCode) {
-        throw new Error('Family code not found');
-      }
-
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(`Family Code: ${familyData.joinCode}`, {
-          mimeType: 'text/plain',
-          dialogTitle: 'Share Family Code'
-        });
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to share family code');
+const handleShareFamilyCode = async () => {
+  setIsCodeVisible(!isCodeVisible);
+  try {
+    if (!familyData?.joinCode) {
+      throw new Error("Family code not found");
     }
-  };
 
-  const handleLeaveFamily = async () => {
-    Alert.alert("Leave Family", "Are you sure you want to leave this family?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Leave",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const response = await fetcher(API_URLS.family.leave, {
-              method: 'POST'
-            });
-            
-            if (response.success) {
-              navigation.replace("Landing");
-            } else {
-              Alert.alert('Error', response.message || 'Failed to leave family');
-            }
-          } catch (error) {
-            Alert.alert('Error', 'Failed to leave family');
+    Alert.alert(
+      "Family Join Code", 
+      `Share this code with your family members:\n\n${familyData.joinCode}`,
+      [
+        {
+          text: "Copy Code",
+          onPress: async () => {
+            await Clipboard.setStringAsync(familyData.joinCode!);
+            Alert.alert("Success", "Code copied to clipboard!");
           }
         },
+        {
+          text: "Close",
+          style: "cancel"
+        }
+      ]
+    );
+  } catch (error: any) {
+    console.error('Error sharing family code:', error);
+    Alert.alert("Error", "Failed to share family code");
+  }
+};
+
+  const handleLeaveFamily = async () => {
+  Alert.alert("Leave Family", "Are you sure you want to leave this family?", [
+    {
+      text: "Cancel",
+      style: "cancel",
+    },
+    {
+      text: "Leave",
+      style: "destructive",
+      onPress: async () => {
+        try {
+          const userId = await getUserId();
+          const response = await fetcher(API_URLS.family.leave, {
+            method: 'POST',
+            body: JSON.stringify({ userId }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.success) {
+            Alert.alert("Success", "Successfully left family", [{
+              text: "OK",
+              onPress: () => navigation.replace("Landing")
+            }]);
+          } else {
+            Alert.alert('Error', response.message || 'Failed to leave family');
+          }
+        } catch (error) {
+          console.error('Error leaving family:', error);
+          Alert.alert("Error", "Failed to leave family");
+        }
       },
-    ]);
-  };
+    },
+  ]);
+};
 
   const handleMenu = () => {
-    console.log("Menu pressed")
-  }
+    console.log("Menu pressed");
+  };
 
   const handleNotifications = () => {
-    console.log("Notifications pressed")
-  }
+    console.log("Notifications pressed");
+  };
 
   return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.notificationButton} onPress={handleNotifications}>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={handleNotifications}
+        >
           <Text style={styles.notificationIcon}>🔔</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.mainWhiteContainer}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>{familyData?.familyName || 'My Family'}</Text>
+          <Text style={styles.title}>
+            {familyData?.familyName || "My Family"}
+          </Text>
 
           {loading ? (
             <Text style={styles.loadingText}>Loading...</Text>
           ) : familyData?.members?.length > 0 ? (
             <View style={styles.membersList}>
-              {familyData.members.map((member: any) => (
-                <TouchableOpacity 
-                  key={member.id} 
-                  style={styles.memberItem} 
+              {familyData.members.map((member: any, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.memberItem}
                   onPress={() => handleMemberPress(member)}
                 >
-                  {/* ...existing member item content... */}
+                  <View style={styles.avatarContainer}>
+                    <Text style={styles.avatar}>
+                      {member.name ? member.name[0].toUpperCase() : "?"}
+                    </Text>
+                  </View>
+                  <View style={styles.memberInfo}>
+                    <Text style={styles.memberName}>
+                      {member.name || "Unknown"}
+                    </Text>
+                    <Text style={styles.memberType}>
+                      {member.type || "Member"}
+                    </Text>
+                  </View>
+                  <Text style={styles.memberArrow}>→</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -153,46 +230,90 @@ const MyFamilyScreen = ({ navigation }: any) => {
             <Text style={styles.noMembersText}>No family members found</Text>
           )}
         </ScrollView>
+        
+        {isCodeVisible && (
+          <TouchableOpacity 
+            style={styles.codeContainer}
+            onPress={async () => {
+              if (familyData?.joinCode) {
+                await Clipboard.setStringAsync(familyData.joinCode);
+                Alert.alert("Copied!", "Family code copied to clipboard");
+              }
+            }}
+          >
+            <Text style={styles.codeLabel}>Family Join Code:</Text>
+            <Text style={styles.codeText}>{familyData?.joinCode || 'Loading...'}</Text>
+            <Text style={styles.copyHint}>Tap to copy</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.bottomSection}>
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.shareButton} onPress={handleShareQR}>
-            <Text style={styles.shareButtonText}>Share QR</Text>
-          </TouchableOpacity>
-          
-          {/* Fix QRCode component */}
-          <View style={{ height: 0, width: 0, overflow: 'hidden' }}>
-            <QRCode
-              value={JSON.stringify({
-                familyId: familyData?.id,
-                familyName: familyData?.name,
-                joinCode: familyData?.joinCode
-              })}
-              size={200}
-              getRef={(ref) => (qrRef = ref)}
-            />
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={handleShareQR}
+            >
+              <Text style={styles.shareButtonText}>Share QR Code</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.shareButton, isCodeVisible && styles.activeShareButton]}
+              onPress={handleShareFamilyCode}
+            >
+              <Text style={styles.shareButtonText}>
+                {isCodeVisible ? 'Hide Code' : 'Share Code'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.shareButton} onPress={handleShareFamilyCode}>
-            <Text style={styles.shareButtonText}>Share Family Code</Text>
+          <TouchableOpacity
+            style={styles.leaveButton}
+            onPress={handleLeaveFamily}
+          >
+            <Text style={styles.leaveButtonText}>Leave Family</Text>
           </TouchableOpacity>
-        </View>
         </View>
       </View>
     </LinearGradient>
-  )
-}
-
+  );
+};
 
 const styles = StyleSheet.create({
+  activeShareButton: {
+    backgroundColor: colors.secondary,
+  },
+  codeContainer: {
+    backgroundColor: colors.fieldBg,
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  codeLabel: {
+    fontSize: 14,
+    color: colors.secondary,
+    marginBottom: 5,
+  },
+  codeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.primary,
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  copyHint: {
+    fontSize: 12,
+    color: colors.secondary,
+    fontStyle: 'italic',
+  },
   loadingText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: colors.primary,
     fontSize: 16,
     marginTop: 20,
   },
   noMembersText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: colors.secondary,
     fontSize: 16,
     marginTop: 20,
@@ -325,6 +446,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-})
+});
 
-export default MyFamilyScreen
+export default MyFamilyScreen;

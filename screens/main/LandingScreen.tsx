@@ -1,24 +1,35 @@
 "use client"
 
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native"
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors } from "../../styles/commonStyles"
 import { API_URLS } from "@/config/api"
 import { fetcher } from "@/utils/fetcher"
+import { getUserId } from "@/utils/storage"
+
 const { width } = Dimensions.get("window")
 
 const LandingScreen = ({ navigation }: any) => {
-  const handleCheckFamily = async () => {
+const handleCheckFamily = async () => {
   try {
-    const response = await fetcher(`${API_URLS.users.current}/family-status`);
+    const userId = await getUserId();
+    if (!userId) {
+      Alert.alert("Error", "User ID is required to check family status");
+      return;
+    }
+
+    const response = await fetcher(API_URLS.family.current, {
+      params: { userId }
+    });
     
-    if (response.hasFamilyId) {
+    if (response.success && response.familyName) {
       navigation.navigate("MyFamily");
     } else {
       navigation.navigate("CheckFamily");
     }
   } catch (error) {
     console.error('Error checking family status:', error);
+    Alert.alert("Error", "Failed to check family status");
   }
 };
 
@@ -26,10 +37,45 @@ const LandingScreen = ({ navigation }: any) => {
     console.log("Check Evacuation Center pressed - placeholder")
   }
 
-  const handleTrackFamilyMember = () => {
-    console.log("Track Family Member pressed - placeholder")
-    navigation.navigate("TrackFamily")
+  const handleTrackFamilyMember = async () => {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      Alert.alert("Error", "User ID not found");
+      return;
+    }
+
+    // Get current user's family info
+    const response = await fetcher(API_URLS.family.current, {
+      params: { userId }
+    });
+
+    if (!response.success) {
+      Alert.alert("Error", "Please join a family first");
+      return;
+    }
+
+    // Find current user in family members
+    const currentMember = response.members?.find((member: any) => member.id.toString() === userId.toString());
+    
+    if (!currentMember) {
+      Alert.alert("Error", "Could not find your family member info");
+      return;
+    }
+
+    navigation.navigate("TrackFamily", {
+      selectedMember: {
+        id: currentMember.id,
+        name: currentMember.name,
+        type: currentMember.type,
+        locationSharingEnabled: currentMember.locationSharingEnabled || false
+      }
+    });
+  } catch (error) {
+    console.error("Error preparing track family screen:", error);
+    Alert.alert("Error", "Failed to load family tracking");
   }
+};
 
   const handleScanQR = () => {
     console.log("Scan QR pressed - placeholder")

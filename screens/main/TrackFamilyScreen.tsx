@@ -1,139 +1,302 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { fetcher } from "@/utils/fetcher"
-import { View, Text, StyleSheet, Dimensions, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors } from "../../styles/commonStyles"
-import MapView, { Marker } from 'react-native-maps'
-import { API_URLS } from "@/config/api"
+import { useState, useEffect, useRef, useCallback } from "react";
+import { fetcher } from "@/utils/fetcher";
+import {
+  Alert,
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../styles/commonStyles";
+import MapView, { Marker } from "react-native-maps";
+import { API_URLS } from "@/config/api";
+import { getUserId } from "@/utils/storage";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const TrackFamilyScreen = ({ route, navigation }: any) => {
-  const { selectedMember } = route.params;
+  const [initialLoad, setInitialLoad] = useState(true);
+  const selectedMember = route.params?.selectedMember;
   const [memberLocation, setMemberLocation] = useState<any>(null);
-  const [familyMembers, setFamilyMembers] = useState<any[]>([]); // Add missing state
+  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const mapRef = useRef<MapView>(null);
+
+  const animateMapToLocation = useCallback((location: any) => {
+    if (!location) return;
+    
+    const newRegion = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      longitudeDelta: 0.01,
+      latitudeDelta: 0.01,
+    };
+    
+    // Always update marker position
+    setMemberLocation(location);
+    
+    // Schedule map animation
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+    }, 50);
+  }, []);
 
   useEffect(() => {
-    // Fetch family members alongside location
-    const fetchData = async () => {
-      try {
-        const [locationRes, familyRes] = await Promise.all([
-          fetcher(API_URLS.family.memberLocation(selectedMember.id)),
-          fetcher(API_URLS.family.current)
-        ]);
-
+const loadInitialData = async () => {
+    setIsLoading(true);
+    try {
+      if (selectedMember && selectedMember.locationSharingEnabled) {
+        const locationRes = await fetcher(
+          API_URLS.family.memberLocation(selectedMember.id)
+        );
         if (locationRes.success && locationRes.location) {
-          setMemberLocation({
+          const newLocation = {
             latitude: parseFloat(locationRes.location.latitude),
             longitude: parseFloat(locationRes.location.longitude),
-            timestamp: locationRes.location.last_location_update
-          });
+            timestamp: locationRes.location.last_location_update,
+          }
+          
+          animateMapToLocation(newLocation);
+          
         }
-
-        if (familyRes.success) {
-          setFamilyMembers(familyRes.members || []);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+      setInitialLoad(false);
+    }
+  };
 
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
+  const handleMemberPress = async (member: any) => {
+    if (!member) return;
+
+    try {
+      // Fetch and process new location...
+      if (member.locationSharingEnabled) {
+        const locationRes = await fetcher(
+          API_URLS.family.memberLocation(member.id)
+        );
+        
+        if (locationRes.success && locationRes.location) {
+          const newLocation = {
+            latitude: parseFloat(locationRes.location.latitude),
+            longitude: parseFloat(locationRes.location.longitude),
+            timestamp: locationRes.location.last_location_update,
+          };
+          
+          animateMapToLocation(newLocation);
+        }
+      }
+
+      // Update selected member params
+      navigation.setParams({
+        selectedMember: {
+          id: member.id,
+          name: member.name,
+          type: member.type,
+          locationSharingEnabled: member.locationSharingEnabled || false,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      Alert.alert("Error", "Failed to fetch location");
+    }
+  };
+
+   loadInitialData();
+    const interval = setInterval(loadInitialData, 30000);
     return () => clearInterval(interval);
-  }, [selectedMember]);
+  }, [selectedMember, initialLoad]);
 
-  const handleMemberPress = (member: any) => {
-    console.log("Tracking member:", member.name)
+  const handleMemberPress = async (member: any) => {
+  if (!member) {
+    Alert.alert("Error", "Member information not available");
+    return;
   }
+
+  try {
+    if (member.locationSharingEnabled) {
+      const locationRes = await fetcher(
+        API_URLS.family.memberLocation(member.id)
+      );
+      
+      if (locationRes.success && locationRes.location) {
+        const newLocation = {
+          latitude: parseFloat(locationRes.location.latitude),
+          longitude: parseFloat(locationRes.location.longitude),
+          timestamp: locationRes.location.last_location_update,
+        };
+        
+        animateMapToLocation(newLocation);
+      }
+    }
+
+    navigation.setParams({
+      selectedMember: {
+        id: member.id,
+        name: member.name,
+        type: member.type,
+        locationSharingEnabled: member.locationSharingEnabled || false,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching member location:", error);
+    Alert.alert("Error", "Failed to fetch member location");
+  }
+};
 
   const handleMenu = () => {
-    console.log("Menu pressed")
-  }
+    console.log("Menu pressed");
+  };
 
   const handleNotifications = () => {
-    console.log("Notifications pressed")
-  }
+    console.log("Notifications pressed");
+  };
 
   return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.notificationButton} onPress={handleNotifications}>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={handleNotifications}
+        >
           <Text style={styles.notificationIcon}>🔔</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.mapContainer}>
-        {!isMapReady && (
+        {(!isMapReady || isLoading) && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         )}
-        
-        {memberLocation && (
-          <MapView
-            style={[styles.map, !isMapReady && styles.hidden]}
-            initialRegion={{
-              latitude: memberLocation.latitude,
-              longitude: memberLocation.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-            onMapReady={() => setIsMapReady(true)}
-          >
+
+      {memberLocation && (
+        <MapView
+          ref={mapRef}
+          style={[styles.map, !isMapReady && styles.hidden]}
+          initialRegion={{
+            latitude: memberLocation.latitude,
+            longitude: memberLocation.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+          onMapReady={() => setIsMapReady(true)}
+          onLayout={() => {
+            // Force initial map position on first layout
+            if (memberLocation) {
+              mapRef.current?.animateToRegion({
+                latitude: memberLocation.latitude,
+                longitude: memberLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }, 100);
+            }
+          }}
+        >
+
             <Marker
               coordinate={{
                 latitude: memberLocation.latitude,
                 longitude: memberLocation.longitude,
               }}
               title={selectedMember.name}
-              description={`Last updated: ${new Date(memberLocation.timestamp).toLocaleString()}`}
+              description={`Last updated: ${new Date(
+                memberLocation.timestamp
+              ).toLocaleString()}`}
             />
           </MapView>
         )}
       </View>
 
       <View style={styles.mainWhiteContainer}>
-        <Text style={styles.familyListTitle}>Family</Text>
-
-        <ScrollView style={styles.membersList} showsVerticalScrollIndicator={false}>
-          {familyMembers.map((member) => (
-            <TouchableOpacity key={member.id} style={styles.memberItem} onPress={() => handleMemberPress(member)}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatar}>{member.avatar}</Text>
-              </View>
-              <View style={styles.memberInfo}>
-                <Text style={styles.memberName}>{member.name}</Text>
-                <Text style={styles.memberType}>{member.type}</Text>
-              </View>
-              <View style={styles.statusContainer}>
-                <View style={[styles.statusDot, { backgroundColor: "#4CAF50" }]} />
-                <Text style={styles.statusText}>{member.status}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <Text style={styles.familyListTitle}>Family Members</Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : (
+          <ScrollView
+            style={styles.membersList}
+            showsVerticalScrollIndicator={false}
+          >
+            {familyMembers.map((member) => (
+              <TouchableOpacity
+                key={member.id}
+                style={[
+                  styles.memberItem,
+                  selectedMember.id === member.id && styles.selectedMemberItem,
+                ]}
+                onPress={() => handleMemberPress(member)} // Use the handleMemberPress function
+              >
+                <View style={styles.avatarContainer}>
+                  <Text style={styles.avatar}>{member.name?.[0] || "?"}</Text>
+                </View>
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <Text style={styles.memberType}>{member.type}</Text>
+                </View>
+                <View style={styles.statusContainer}>
+                  <View
+                    style={[
+                      styles.statusDot,
+                      {
+                        backgroundColor: member.locationSharingEnabled
+                          ? "#4CAF50"
+                          : "#FF5252",
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      {
+                        color: member.locationSharingEnabled
+                          ? "#4CAF50"
+                          : "#FF5252",
+                      },
+                    ]}
+                  >
+                    {member.locationSharingEnabled ? "Online" : "Offline"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </LinearGradient>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
+  selectedMemberItem: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
   loadingContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.white,
   },
   hidden: {
@@ -141,12 +304,12 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     height: height * 0.4,
-    width: '100%',
-    overflow: 'hidden',
+    width: "100%",
+    overflow: "hidden",
   },
   map: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   container: {
     flex: 1,
@@ -269,6 +432,6 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     fontWeight: "500",
   },
-})
+});
 
-export default TrackFamilyScreen
+export default TrackFamilyScreen;

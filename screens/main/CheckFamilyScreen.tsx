@@ -1,134 +1,210 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Dimensions } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors, commonStyles } from "../../styles/commonStyles"
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { fetcher } from "@/utils/fetcher"
-import { API_URLS } from "@/config/api"
-import { Alert } from "react-native"
+import * as ImagePicker from 'expo-image-picker';
+import { getUserId } from '@/utils/storage';
+import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Dimensions, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../styles/commonStyles";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { fetcher } from "@/utils/fetcher";
+import { API_URLS } from "@/config/api";
 
-const { width } = Dimensions.get("window")
+const { width } = Dimensions.get("window");
 
-const CheckFamilyScreen = ({ navigation, route }: any) => {
-  const [facing, setFacing] = useState<CameraType>('back');
+const CheckFamilyScreen = ({ navigation }: any) => {
+  const [facing, setFacing] = useState<CameraType>("back");
   const [scanning, setScanning] = useState(false);
   const [familyCode, setFamilyCode] = useState("");
   const [permission, requestPermission] = useCameraPermissions();
+  const [familyName, setFamilyName] = useState('');
 
-  // Handle permission states
-  if (!permission) {
-    return (
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
-        <View style={styles.mainWhiteContainer}>
-          <Text style={styles.loadingText}>Loading camera permissions...</Text>
-        </View>
-      </LinearGradient>
-    );
-  }
+  // Check if the user is already part of a family
+useEffect(() => {
+  const checkFamilyStatus = async () => {
+    try {
+      const userId = await getUserId();
+      if (!userId) {
+        Alert.alert("Error", "User ID is required to check family status");
+        return;
+      }
+      
+      // Make sure we're using the correct endpoint
+      const response = await fetcher(API_URLS.family.current, {
+        params: { userId }
+      });
 
-  if (!permission.granted) {
-    return (
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
-        <View style={styles.mainWhiteContainer}>
-          <Text style={styles.message}>Camera permission is required to scan QR codes</Text>
-          <TouchableOpacity 
-            style={commonStyles.button} 
-            onPress={requestPermission}
-          >
-            <Text style={commonStyles.buttonText}>Grant Permission</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    );
-  }
+      console.log("Family status response:", response);
+      
+      if (response.success && response.familyName) {
+        navigation.replace("MyFamily");
+      }
+    } catch (error) {
+      console.error("Error checking family status:", error);
+      Alert.alert("Error", "Failed to check family status");
+    }
+  };
+
+  // Add navigation listener to re-check on focus
+  const unsubscribe = navigation.addListener('focus', checkFamilyStatus);
+  
+  // Check immediately
+  checkFamilyStatus();
+  
+  return unsubscribe;
+}, [navigation]);
 
   const handleScanQR = async () => {
     const { status } = await requestPermission();
-    if (status === 'granted') {
+    if (status === "granted") {
       setScanning(true);
     } else {
-      Alert.alert('Permission Required', 'Camera permission is needed to scan QR codes');
+      Alert.alert("Permission Required", "Camera permission is needed to scan QR codes");
     }
   };
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
-  setScanning(false);
-  try {
-    const qrData = JSON.parse(data);
-    if (!qrData.familyId) throw new Error('Invalid QR code');
+    setScanning(false);
+    try {
+      const userId = await getUserId();
+      if (!userId) {
+        Alert.alert("Error", "User ID is required to join a family");
+        return;
+      }
 
-    const response = await fetcher(API_URLS.family.join, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        familyId: qrData.familyId,
-        joinCode: qrData.joinCode // If your QR includes a join code
-      })
+      const qrData = JSON.parse(data);
+      if (!qrData.familyId) {
+        throw new Error("QR code does not contain a valid family ID");
+      }
+
+      // Don't send userId in body since backend expects query param
+      const response = await fetcher(API_URLS.family.join, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          familyId: qrData.familyId,
+          joinCode: qrData.joinCode ?? null
+        }),
+        // Add userId as query parameter
+        params: {userId}
+      });
+
+      if (response.success) {
+        navigation.replace("MyFamily");
+      } else {
+        throw new Error(response.message || "Failed to join family");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "An error occurred");
+      setScanning(true);
+    }
+  };
+
+
+const handleUploadQR = async () => {
+  try {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Required', 'Please allow access to your photos to upload QR code');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
     });
 
-    if (response.success) {
-      Alert.alert('Success', 'Successfully joined family', [{
-        text: 'OK',
-        onPress: () => navigation.replace("MyFamily")
-      }]);
-    } else {
-      throw new Error(response.message || 'Failed to join family');
+    if (!result.canceled && result.assets[0]) {
+      // Create form data with proper typing
+      const formData = new FormData();
+      const fileUri = result.assets[0].uri;
+      const fileName = fileUri.split('/').pop() || 'qr-code.jpg';
+      
+      // @ts-ignore - React Native's FormData implementation accepts additional properties
+      formData.append('qrImage', {
+        uri: fileUri,
+        type: 'image/jpeg',
+        name: fileName,
+      });
+
+      const userId = await getUserId();
+      if (userId) {
+        formData.append('userId', userId);
+      }
+
+      const response = await fetcher(API_URLS.family.uploadQR, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'QR code processed successfully', [
+          { text: 'OK', onPress: () => navigation.replace('MyFamily') }
+        ]);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to process QR code');
+      }
     }
-  } catch (error: any) {
-    Alert.alert('Error', error.message);
-    setScanning(true);
+  } catch (error) {
+    console.error('Error uploading QR:', error);
+    Alert.alert('Error', 'Failed to upload QR code');
   }
 };
 
-
-  const handleUploadQR = () => {
-    console.log("Upload QR pressed - placeholder")
-  }
-
-  const handleEnterCode = async () => {
-  if (!familyCode.trim()) {
-    Alert.alert('Error', 'Please enter a family code');
-    return;
-  }
-
+const handleJoinWithCode = async () => {
   try {
+    if (!familyCode.trim()) {
+      Alert.alert('Error', 'Please enter a family code');
+      return;
+    }
+
+    const userId = await getUserId();
+    if (!userId) {
+      Alert.alert('Error', 'User ID not found');
+      return;
+    }
+
     const response = await fetcher(API_URLS.family.joinByCode, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: familyCode.trim() })
+      body: JSON.stringify({
+        code: familyCode,
+        userId: userId
+      }),
     });
 
     if (response.success) {
-      Alert.alert('Success', 'Successfully joined family', [{
-        text: 'OK',
-        onPress: () => navigation.replace("MyFamily")
-      }]);
+      Alert.alert('Success', 'Successfully joined family!', [
+        { text: 'OK', onPress: () => navigation.replace('MyFamily') }
+      ]);
     } else {
       Alert.alert('Error', response.message || 'Failed to join family');
     }
-  } catch (error: any) {
-    Alert.alert('Error', error.message || 'Failed to join family');
+  } catch (error) {
+    console.error('Error joining family:', error);
+    Alert.alert('Error', 'Failed to join family');
   }
 };
 
   const handleCreateFamily = () => {
-    console.log("Create Family pressed")
-    navigation.navigate("CreateFamily")
-  }
+    console.log("Create Family pressed");
+    navigation.navigate("CreateFamily");
+  };
 
   const handleMenu = () => {
-    console.log("Menu pressed")
-  }
+    console.log("Menu pressed");
+  };
 
   const handleNotifications = () => {
-    console.log("Notifications pressed")
-  }
+    console.log("Notifications pressed");
+  };
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.container}>
@@ -156,11 +232,11 @@ const CheckFamilyScreen = ({ navigation, route }: any) => {
           />
         ) : (
           <TouchableOpacity style={styles.cameraContainer} onPress={handleScanQR}>
-          <View style={styles.cameraBox}>
-            <Text style={styles.cameraIcon}>📷</Text>
-            <Text style={styles.cameraText}>Tap to scan QR code</Text>
-          </View>
-        </TouchableOpacity>
+            <View style={styles.cameraBox}>
+              <Text style={styles.cameraIcon}>📷</Text>
+              <Text style={styles.cameraText}>Tap to scan QR code</Text>
+            </View>
+          </TouchableOpacity>
         )}
 
         <View style={styles.bottomSection}>
@@ -184,7 +260,7 @@ const CheckFamilyScreen = ({ navigation, route }: any) => {
                 onChangeText={setFamilyCode}
                 placeholderTextColor="#999"
               />
-              <TouchableOpacity style={styles.arrowButton} onPress={handleEnterCode}>
+              <TouchableOpacity style={styles.arrowButton} onPress={handleJoinWithCode}>
                 <Text style={styles.arrowText}>→</Text>
               </TouchableOpacity>
             </View>
@@ -192,8 +268,8 @@ const CheckFamilyScreen = ({ navigation, route }: any) => {
         </View>
       </View>
     </LinearGradient>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
    camera: {

@@ -4,33 +4,59 @@ import { useState } from "react"
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { colors } from "../../styles/commonStyles"
+import { fetcher } from "@/utils/fetcher"
+import { API_URLS } from "@/config/api"
+import { getUserId } from "@/utils/storage"
+
 
 const CreateFamilyScreen = ({ navigation }: any) => {
   const [familyName, setFamilyName] = useState("")
   const [description, setDescription] = useState("")
 
-  const handleCreateFamily = () => {
+const handleCreateFamily = async () => {
+  try {
     if (!familyName.trim()) {
       Alert.alert("Error", "Please enter a family name")
       return
     }
 
-    const familyData = {
-      familyName: familyName.trim(),
-      description: description.trim(),
-      createdAt: new Date().toISOString(),
-      familyCode: Math.random().toString(36).substring(2, 8).toUpperCase(), // Generate random code
+    const userId = await getUserId()
+    if (!userId) {
+      Alert.alert("Error", "User ID not found")
+      return
     }
 
-    console.log("Creating family:", familyData)
-
-    Alert.alert("Family Created", `Family "${familyName}" has been created successfully!`, [
-      {
-        text: "OK",
-        onPress: () => navigation.navigate("MyFamily"),
+    const response = await fetcher(API_URLS.family.create, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ])
+      body: JSON.stringify({
+        name: familyName.trim(),
+        description: description.trim(),
+        userId: userId
+      }),
+    })
+
+    if (response.success) {
+      Alert.alert(
+        "Success", 
+        `Family "${familyName}" has been created successfully!\nYour family code is: ${response.joinCode}`,
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.replace("MyFamily")
+          },
+        ]
+      )
+    } else {
+      Alert.alert("Error", response.message || "Failed to create family")
+    }
+  } catch (error) {
+    console.error("Error creating family:", error)
+    Alert.alert("Error", "Failed to create family")
   }
+}
 
   const handleCancel = () => {
     navigation.goBack()

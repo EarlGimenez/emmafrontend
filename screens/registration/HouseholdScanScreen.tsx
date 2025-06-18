@@ -35,25 +35,30 @@ const HouseholdScanScreen = ({ navigation, route }: any) => {
 
 const handleBarCodeScanned = async ({ data }: { data: string }) => {
   if (isProcessing) return;
-  
+
   setIsProcessing(true);
   try {
     const familyId = data.split('/').pop();
     if (!familyId) throw new Error('Invalid QR code');
 
     const response = await fetcher(API_URLS.family.get(familyId));
-    
-    // Include familyId in userData
-    const updatedUserData = {
-      ...userData,
-      familyId: familyId
-    };
 
-    navigation.navigate("HouseholdInfo", {
-      householdName: response.familyName,
-      familyId: familyId,
-      userData: updatedUserData
-    });
+    if (response.success) {
+      const updatedUserData = {
+        ...userData,
+        familyId: familyId,
+        familyName: response.familyName, // Ensure familyName is passed
+        householdMembers: response.members || [], // Ensure members are passed
+      };
+
+      navigation.navigate("HouseholdInfo", {
+        householdName: response.familyName,
+        familyId: familyId,
+        userData: updatedUserData,
+      });
+    } else {
+      throw new Error(response.message || 'Failed to fetch family data');
+    }
   } catch (error) {
     setError('Failed to process QR code');
   } finally {

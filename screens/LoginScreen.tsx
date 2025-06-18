@@ -13,7 +13,7 @@ const LoginScreen = ({ navigation }: any) => {
 
   const handleLogin = async () => {
     // Simulate authentication with userId 1
-    await AsyncStorage.setItem('userId', '1');
+    await AsyncStorage.setItem('userId', '2');
     navigation.navigate("Landing");
   };
 
