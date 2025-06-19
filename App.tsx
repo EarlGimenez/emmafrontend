@@ -42,6 +42,7 @@ import DonateScreen from "./screens/main/DonateScreen";
 import RequestEntryScreen from './screens/requests/RequestEntryScreen';
 import RequestProcessScreen from './screens/requests/RequestProcessScreen';
 import MyRequestsScreen from './screens/requests/MyRequestsScreen';
+import ProfileUpdateScreen from "./screens/main/ProfileUpdateScreen";
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator(); // Create a Drawer Navigator instance
@@ -122,6 +123,7 @@ export default function App() {
         <Stack.Screen name="CreateFamily" component={CreateFamilyScreen} />
         <Stack.Screen name="MyFamily" component={MyFamilyScreen} />
         <Stack.Screen name="TrackFamily" component={TrackFamilyScreen} />
+        <Stack.Screen name="ProfileUpdate" component={ProfileUpdateScreen} />
 
         <Stack.Screen name="DataPrivacyConsent" component={DataPrivacyConsentScreen} />
         <Stack.Screen name="VolunteerApplicationSubmitted" component={VolunteerApplicationSubmittedScreen} />

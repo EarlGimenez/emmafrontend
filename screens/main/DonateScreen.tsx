@@ -12,12 +12,20 @@ import { API_URLS } from "@/config/api";
 
 const { width } = Dimensions.get('window'); // Get window width for tab view layout
 
+const imageMap: { [key: string]: any } = {
+  "cebu-sports-center": require("../../assets/images/cebu-sports-center.jpg"),
+  "abellana": require("../../assets/images/abellana.jpg"),
+  "cnu": require("../../assets/images/cnu.jpg"),
+  "fuente": require("../../assets/images/fuente.jpg"),
+  "family": require("../../assets/images/family.jpg"),
+};
+
 // --- Mock Data (Will be replaced by API calls) ---
 const DUMMY_EVAC_CENTERS = [
-  { id: "e1", name: "Cebu City Sports Center", location: "Osmeña Blvd, Cebu City", contact: "09171234567", description: "Main sports complex, large capacity.", imageUrl: "https://placehold.co/100x100/A2D2FF/000000?text=Sports+Center" },
-  { id: "e2", name: "Abellana National School Gym", location: "Cebu City, 6000 Cebu", contact: "09207654321", description: "School gymnasium, suitable for many evacuees.", imageUrl: "https://placehold.co/100x100/FFB4A2/000000?text=Abellana" },
-  { id: "e3", name: "Cebu Normal University Covered Court", location: "Osmeña Blvd, Cebu City", contact: "09328765432", description: "University court, good protection from elements.", imageUrl: "https://placehold.co/100x100/B5EAD7/000000?text=CNU" },
-  { id: "e4", name: "Fuente Osmeña Circle Grounds", location: "Fuente Osmeña, Cebu City", contact: "09991112233", description: "Open grounds, suitable for temporary tent setups.", imageUrl: "https://placehold.co/100x100/FFF8DC/000000?text=Fuente" },
+  { id: "e1", name: "Cebu City Sports Center", location: "Osmeña Blvd, Cebu City", contact: "09171234567", description: "Main sports complex, large capacity.", imageUrl: "cebu-sports-center" },
+  { id: "e2", name: "Abellana National School Gym", location: "Cebu City, 6000 Cebu", contact: "09207654321", description: "School gymnasium, suitable for many evacuees.", imageUrl: "abellana" },
+  { id: "e3", name: "Cebu Normal University Covered Court", location: "Osmeña Blvd, Cebu City", contact: "09328765432", description: "University court, good protection from elements.", imageUrl: "cnu" },
+  { id: "e4", name: "Fuente Osmeña Circle Grounds", location: "Fuente Osmeña, Cebu City", contact: "09991112233", description: "Open grounds, suitable for temporary tent setups.", imageUrl: "fuente" },
 ];
 
 const DUMMY_RECENT_DONATIONS = [
@@ -145,7 +153,7 @@ const NearbyEVACCentersRoute = ({ jumpTo, navigation }: { jumpTo: (key: string) 
       ) : (
         filteredEvacCenters.map((center) => (
           <View key={center.id} style={styles.evacCenterCard}>
-            <Image source={{ uri: center.imageUrl }} style={styles.evacCenterImage} />
+            <Image source={imageMap[center.imageUrl]} style={styles.evacCenterImage} />
             <View style={styles.evacCenterInfo}>
               <Text style={styles.evacCenterName}>{center.name}</Text>
               <Text style={styles.evacCenterDetail}><Ionicons name="location-outline" size={14} /> {center.location}</Text>
@@ -286,27 +294,21 @@ const DonateScreen = () => {
   );
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
-      <View style={commonStyles.container}>
-        <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Donate</Text>
-        </TouchableOpacity>
+    <View style={[commonStyles.container, { backgroundColor: colors.primary }]}>
+      <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={commonStyles.backButtonText}>← Donate</Text>
+      </TouchableOpacity>
 
-        <View style={commonStyles.whiteContainer}>
-          <Text style={commonStyles.title}>Donate Now!</Text> {/* Updated Header */}
-          <TabView
-            navigationState={{ index, routes }}
-            renderScene={renderScene}
-            onIndexChange={setIndex}
-            initialLayout={{ width: width - 40 }} // Adjust initial layout width based on container padding
-            renderTabBar={renderTabBar}
-          />
-        </View>
+      <View style={commonStyles.whiteContainer}>
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          onIndexChange={setIndex}
+          initialLayout={{ width: width - 40 }} // Adjust initial layout width based on container padding
+          renderTabBar={renderTabBar}
+        />
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 

@@ -1,10 +1,8 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, Alert } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, DrawerActions } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import for check-decagram-outline
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, commonStyles } from "@/styles/commonStyles";
 import { fetcher } from "@/utils/fetcher";
@@ -54,7 +52,7 @@ const ProfileScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const handleEditProfile = () => {
+  const handleUpdateAccountInformation = () => {
     navigation.navigate("ProfileUpdate", { userData: userData });
   };
 
@@ -111,70 +109,71 @@ const ProfileScreen = () => {
   }
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
-      <View style={commonStyles.container}>
-        <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Profile</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.menuIcon}>
+          <Ionicons name="menu" size={30} color={colors.white} />
         </TouchableOpacity>
-
-        <View style={commonStyles.whiteContainer}>
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            <Text style={commonStyles.title}>My Profile</Text>
-
-            {/* Profile Picture Section */}
-            <View style={styles.profilePictureContainer}>
-              <Ionicons name="person-circle-outline" size={80} color="#fff" />
-              <Text style={styles.userName}>{userData?.name || "N/A"}</Text>
-              <Text style={styles.userEmail}>{userData?.email || "N/A"}</Text>
-            </View>
-
-            {/* Profile Details */}
-            <View style={styles.detailsContainer}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Account Type:</Text>
-                <Text style={styles.detailValue}>{userData?.account_type || "N/A"}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Status:</Text>
-                <Text style={[styles.detailValue, userData?.status === 'active' ? styles.statusActive : styles.statusPending]}>
-                  {userData?.status ? userData.status.toUpperCase() : "N/A"}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Date of Birth:</Text>
-                <Text style={styles.detailValue}>{userData?.date_of_birth || "N/A"}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Contact Number:</Text>
-                <Text style={styles.detailValue}>{userData?.contact_number || "N/A"}</Text>
-              </View>
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity style={commonStyles.button} onPress={handleEditProfile}>
-                <Text style={commonStyles.buttonText}>Edit Profile</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={handleDeleteAccount}
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={styles.deleteButtonText}>Delete Account</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity onPress={() => console.log('Notification Bell Pressed')} style={styles.notificationBell}>
+          <Ionicons name="notifications" size={26} color={colors.white} />
+        </TouchableOpacity>
       </View>
-    </LinearGradient>
+
+      {/* Main Content ScrollView */}
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Profile Picture Section */}
+        <View style={styles.profilePictureSection}>
+          <Ionicons name="person-circle-outline" size={100} color={colors.primary} />
+          <Text style={styles.userName}>{userData?.name || "N/A"}</Text>
+          {userData!.account_type && (
+            <Text style={styles.userAccountType}>{userData.account_type.toUpperCase()}</Text>
+          )}
+          {userData?.status === 'active' && (
+            <View style={styles.verifiedStatus}>
+              <MaterialCommunityIcons name="check-decagram-outline" size={18} color="#007bff" />
+              <Text style={styles.verifiedText}>Fully Verified</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Profile Details */}
+        <View style={styles.detailsContainer}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>DATE OF BIRTH</Text>
+            <Text style={styles.detailValue}>{userData?.date_of_birth || "N/A"}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>CONTACT NUMBER</Text>
+            <Text style={styles.detailValue}>{userData?.contact_number || "N/A"}</Text>
+          </View>
+          <View style={[styles.detailRow, styles.lastDetailRow]}> {/* lastDetailRow for no bottom border */}
+            <Text style={styles.detailLabel}>EMAIL ADDRESS</Text>
+            <Text style={styles.detailValue}>{userData?.email || "N/A"}</Text>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={commonStyles.button} onPress={handleUpdateAccountInformation}>
+            <Text style={commonStyles.buttonText}>Update Account Information</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.deleteButtonTextOnly}
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <ActivityIndicator color="#dc3545" />
+            ) : (
+              <Text style={styles.deleteButtonTextOnlyColor}>Delete Account</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -190,68 +189,98 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
   },
-  scrollViewContent: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary, // Primary color for header background
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 50, // Adjust for status bar
     paddingBottom: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'space-between', // Space out header elements
+  },
+  menuIcon: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.white,
+    flex: 1, // Allow title to take available space
+    textAlign: 'center', // Center the title
+    // No marginLeft here, flex:1 and justifyContent: 'space-between' handle centering
+  },
+  notificationBell: {
+    padding: 5,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 0, // No border radius as per image
+    borderTopRightRadius: 0, // No border radius as per image
+    paddingTop: 20,
+    paddingHorizontal: 20,
     alignItems: "center",
   },
-  profilePictureContainer: {
+  profilePictureSection: {
     alignItems: "center",
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  profilePicture: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: colors.primary,
-    marginBottom: 10,
+    marginBottom: 30,
+    marginTop: 20,
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
     color: colors.primary,
+    marginTop: 10, // Space from icon
   },
-  userEmail: {
+  userAccountType: {
     fontSize: 16,
     color: "#666",
+    marginBottom: 5, // Space from name
+  },
+  verifiedStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  verifiedText: {
+    fontSize: 14,
+    color: "#007bff", // Blue color for verified status
+    fontWeight: '600',
+    marginLeft: 5,
   },
   detailsContainer: {
     width: "100%",
-    backgroundColor: colors.fieldBg,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: colors.white, // White background as per image
+    borderRadius: 0, // No border radius
+    paddingHorizontal: 0, // No horizontal padding for the container itself
     marginBottom: 30,
+    // No shadow as per image
   },
   detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
+    flexDirection: "column", // Stack label and value vertically
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: '#eee', // Light grey border
+    width: '100%',
+    paddingHorizontal: 20, // Add horizontal padding for rows
+    alignItems: 'flex-start', // Align text to start
+  },
+  lastDetailRow: {
+    borderBottomWidth: 0, // No border for the last row
   },
   detailLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: colors.primary,
+    marginBottom: 5, // Space between label and value
   },
   detailValue: {
     fontSize: 16,
     color: "#555",
-  },
-  statusActive: {
-    color: "green",
-    fontWeight: "bold",
-  },
-  statusPending: {
-    color: "orange",
-    fontWeight: "bold",
   },
   actionButtonsContainer: {
     width: '100%',
@@ -259,16 +288,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center', // Center buttons horizontally
   },
-  deleteButton: {
-    backgroundColor: '#dc3545', // Red for delete action
-    padding: 12,
-    borderRadius: 15,
-    alignItems: "center",
-    marginTop: 15, // Space from Edit Profile button
-    width: '80%', // Match commonStyles.button width
+  deleteButtonTextOnly: {
+    padding: 10, // Provide some tap area
+    marginTop: 15,
+    alignItems: 'center',
   },
-  deleteButtonText: {
-    color: colors.white,
+  deleteButtonTextOnlyColor: {
+    color: '#dc3545', // Red color for delete action
     fontSize: 16,
     fontWeight: "600",
   },

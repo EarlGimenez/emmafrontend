@@ -7,31 +7,38 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, commonStyles } from "@/styles/commonStyles"; // Assuming common styles
 
+const imageMap: { [key: string]: any } = {
+  "train1": require("../../assets/images/train1.jpg"),
+  "train2": require("../../assets/images/train2.jpg"),
+  "train3": require("../../assets/images/train3.png"),
+  "train4": require("../../assets/images/train4.png"),
+}
+
 // Dummy data for demonstration. This will eventually come from your Laravel API.
 const DUMMY_TRAININGS = [
   {
     id: "1",
     title: "Community-Based Disaster Risk Reduction (CBDRR) for PWDs",
     description: "Learn essential strategies for disaster preparedness and response tailored for Persons With Disabilities (PWDs) in a community setting.",
-    image: "https://placehold.co/100x100/A2D2FF/000000?text=CBDRR", // Placeholder image
+    image: "train1", // Placeholder image
   },
   {
     id: "2",
     title: "First Aid & Basic Life Support Training",
     description: "Comprehensive training on providing immediate medical assistance and life-saving techniques during emergencies.",
-    image: "https://placehold.co/100x100/FFB4A2/000000?text=First+Aid", // Placeholder image
+    image: "train2", // Placeholder image
   },
   {
     id: "3",
     title: "Psychological First Aid (PFA) for Disaster Responders",
     description: "Training to provide initial mental and emotional support to individuals affected by traumatic events.",
-    image: "https://placehold.co/100x100/B5EAD7/000000?text=PFA", // Placeholder image
+    image: "train3", // Placeholder image
   },
   {
     id: "4",
     title: "Shelter Management and Evacuation Procedures",
     description: "Understand the principles of managing evacuation centers and effective evacuation protocols.",
-    image: "https://placehold.co/100x100/FFF8DC/000000?text=Shelter", // Placeholder image
+    image: "train4", // Placeholder image
   },
 ];
 
@@ -145,7 +152,7 @@ const TrainingsScreen = () => {
             ) : (
               trainings.map((training) => (
                 <View key={training.id} style={styles.trainingCard}>
-                  <Image source={{ uri: training.image }} style={styles.trainingImage} />
+                  <Image source={imageMap[training.image]} style={styles.trainingImage} />
                   <View style={styles.trainingInfo}>
                     <Text style={styles.trainingTitle}>{training.title}</Text>
                     <Text style={styles.trainingDescription}>{training.description}</Text>
@@ -203,7 +210,7 @@ const styles = StyleSheet.create({
   },
   trainingImage: {
     width: 80,
-    height: 80,
+    height: '100%',
     borderRadius: 10,
     marginRight: 15,
     resizeMode: 'cover',

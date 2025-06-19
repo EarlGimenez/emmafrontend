@@ -1,31 +1,38 @@
+// ProfileUpdateScreen.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import DateTimePicker from "@react-native-community/datetimepicker"; // For date picker
+import { useNavigation, useRoute, DrawerActions } from "@react-navigation/native"; // Added DrawerActions
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons"; // For back arrow and notification
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // For check-decagram-outline and pencil icons
 import { colors, commonStyles } from "@/styles/commonStyles";
 import { fetcher } from "@/utils/fetcher";
 import { API_URLS } from "@/config/api";
 
 const ProfileUpdateScreen = () => {
   const navigation = useNavigation<any>();
-  const route = useRoute(); // Use useRoute hook to access route params
-  const { userData: initialUserData } = route.params as { userData: any }; // Get initial user data
+  const route = useRoute();
+  const { userData: initialUserData } = route.params as { userData: any };
 
-  // State variables for editable fields
   const [fullName, setFullName] = useState(initialUserData?.name || "");
   const [dateOfBirth, setDateOfBirth] = useState(initialUserData?.date_of_birth || "");
   const [contactNumber, setContactNumber] = useState(initialUserData?.contact_number || "");
-  const [showDatePicker, setShowDatePicker] = useState(false); // State for showing date picker
-  const [loading, setLoading] = useState(false); // Loading indicator for API call
+  const [emailAddress, setEmailAddress] = useState(initialUserData?.email || ""); // Email as state for display consistency
+  const [password, setPassword] = useState("********"); // Placeholder for password, not actual value
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Function to handle date change from DateTimePicker
+  // States to control which field is being edited
+  const [editingFullName, setEditingFullName] = useState(false);
+  const [editingContactNumber, setEditingContactNumber] = useState(false);
+  const [editingEmailAddress, setEditingEmailAddress] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
+
   const onDateChange = (event: any, selectedDate: Date | undefined) => {
-    setShowDatePicker(false); // Hide date picker
+    setShowDatePicker(false);
     if (selectedDate) {
-      // Format date to 'YYYY-MM-DD'
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -33,31 +40,26 @@ const ProfileUpdateScreen = () => {
     }
   };
 
-  // Handle profile update submission
   const handleUpdateProfile = async () => {
     setLoading(true);
     try {
-      // Construct the payload with updated fields
       const updatedProfileData = {
         name: fullName,
-        dateOfBirth: dateOfBirth,
-        contactNumber: contactNumber,
-        // emailAddress: initialUserData?.email, // Email is often not editable or handled separately
-        // password: initialUserData?.password, // Passwords are handled in a separate "Change Password" flow
+        date_of_birth: dateOfBirth, // Ensure key matches backend expected format
+        contact_number: contactNumber, // Ensure key matches backend expected format
+        // Email and password usually updated via separate flows for security
+        email: emailAddress, // Include email if it's meant to be editable here
       };
 
-      // Send a PUT/PATCH request to update the user's profile
-      // Assuming your backend has an endpoint like /api/users/{userId} for updates
-      const response = await fetcher(API_URLS.users.profile, { // Assuming API_URLS.users.profile is actually /api/user for authenticated user
-        method: "PUT", // Or PATCH
+      const response = await fetcher(API_URLS.users.profile, {
+        method: "PUT",
         body: JSON.stringify(updatedProfileData),
       });
 
       if (response.success) {
         Alert.alert("Success", "Profile updated successfully!");
-        navigation.goBack(); // Navigate back to the ProfileScreen to show updated data
+        navigation.goBack();
       } else {
-        // Handle backend validation errors or other API errors
         const errorMessage = response.errors ? Object.values(response.errors).flat().join("\n") : response.message || "Failed to update profile.";
         Alert.alert("Update Failed", errorMessage);
       }
@@ -70,35 +72,60 @@ const ProfileUpdateScreen = () => {
   };
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
-      <View style={commonStyles.container}>
-        <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Edit Profile</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Ionicons name="arrow-back" size={30} color={colors.white} />
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => console.log('Notification Bell Pressed')} style={styles.notificationBell}>
+          <Ionicons name="notifications" size={26} color={colors.white} />
+        </TouchableOpacity>
+      </View>
 
-        <View style={commonStyles.whiteContainer}>
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            <Text style={commonStyles.title}>Edit Profile</Text>
-
-            <View style={commonStyles.fieldContainer}>
-              <Text style={commonStyles.fieldLabel}>Full Name</Text>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Profile Picture Section */}
+        <View style={styles.profilePictureSection}>
+          <Ionicons name="person-circle-outline" size={100} color={colors.primary} />
+          <View style={styles.nameEditContainer}>
+            {editingFullName ? (
               <TextInput
-                style={commonStyles.input}
-                placeholder="Full Name"
+                style={styles.userNameInput}
                 value={fullName}
                 onChangeText={setFullName}
+                onBlur={() => setEditingFullName(false)}
+                autoFocus
               />
+            ) : (
+              <Text style={styles.userName}>{fullName}</Text>
+            )}
+            <TouchableOpacity onPress={() => setEditingFullName(true)}>
+              <MaterialCommunityIcons name="pencil-outline" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+          {initialUserData?.account_type && (
+            <Text style={styles.userAccountType}>{initialUserData.account_type.toUpperCase()}</Text>
+          )}
+          {initialUserData?.status === 'active' && (
+            <View style={styles.verifiedStatus}>
+              <MaterialCommunityIcons name="check-decagram-outline" size={18} color="#007bff" />
+              <Text style={styles.verifiedText}>Fully Verified</Text>
             </View>
+          )}
+        </View>
 
-            <View style={commonStyles.fieldContainer}>
-              <Text style={commonStyles.fieldLabel}>Date of Birth</Text>
-              <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                <Text style={commonStyles.input}>
-                  {dateOfBirth || "Select Date of Birth"}
+        {/* Profile Details */}
+        <View style={styles.detailsContainer}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>DATE OF BIRTH</Text>
+            <View style={styles.valueEditContainer}>
+              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.touchableDetailValue}>
+                <Text style={styles.detailValue}>
+                  {dateOfBirth || "Select Date"}
                 </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                <MaterialCommunityIcons name="pencil-outline" size={20} color="#666" />
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
@@ -110,57 +137,238 @@ const ProfileUpdateScreen = () => {
                 />
               )}
             </View>
+          </View>
 
-            <View style={commonStyles.fieldContainer}>
-              <Text style={commonStyles.fieldLabel}>Contact Number</Text>
-              <TextInput
-                style={commonStyles.input}
-                placeholder="Contact Number"
-                value={contactNumber}
-                onChangeText={setContactNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            {/* Email Address (read-only for display) */}
-            <View style={commonStyles.fieldContainer}>
-              <Text style={commonStyles.fieldLabel}>Email Address (Read-only)</Text>
-              <TextInput
-                style={[commonStyles.input, styles.readOnlyInput]}
-                value={initialUserData?.email || "N/A"}
-                editable={false} // Make it read-only
-              />
-            </View>
-
-            <View style={commonStyles.bottomButton}>
-              <TouchableOpacity
-                style={commonStyles.button}
-                onPress={handleUpdateProfile}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={commonStyles.buttonText}>Save Changes</Text>
-                )}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>CONTACT NUMBER</Text>
+            <View style={styles.valueEditContainer}>
+              {editingContactNumber ? (
+                <TextInput
+                  style={styles.detailValueInput}
+                  value={contactNumber}
+                  onChangeText={setContactNumber}
+                  keyboardType="phone-pad"
+                  onBlur={() => setEditingContactNumber(false)}
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.detailValue}>{contactNumber || "N/A"}</Text>
+              )}
+              <TouchableOpacity onPress={() => setEditingContactNumber(true)}>
+                <MaterialCommunityIcons name="pencil-outline" size={20} color="#666" />
               </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
+
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>EMAIL ADDRESS</Text>
+            <View style={styles.valueEditContainer}>
+              {editingEmailAddress ? (
+                <TextInput
+                  style={styles.detailValueInput}
+                  value={emailAddress}
+                  onChangeText={setEmailAddress}
+                  keyboardType="email-address"
+                  onBlur={() => setEditingEmailAddress(false)}
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.detailValue}>{emailAddress || "N/A"}</Text>
+              )}
+              <TouchableOpacity onPress={() => setEditingEmailAddress(true)}>
+                <MaterialCommunityIcons name="pencil-outline" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={[styles.detailRow, styles.lastDetailRow]}>
+            <Text style={styles.detailLabel}>PASSWORD</Text>
+            <View style={styles.valueEditContainer}>
+              {editingPassword ? (
+                <TextInput
+                  style={styles.detailValueInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  onBlur={() => setEditingPassword(false)}
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.detailValue}>********</Text>
+              )}
+              <TouchableOpacity onPress={() => setEditingPassword(true)}>
+                <MaterialCommunityIcons name="pencil-outline" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
-    </LinearGradient>
+
+        {/* Register PWD/Senior ID */}
+        <TouchableOpacity style={styles.registerIdButton} onPress={() => Alert.alert("Register ID", "Navigate to PWD/Senior ID registration screen.")}>
+          <MaterialCommunityIcons name="wheelchair-accessibility" size={24} color={colors.primary} />
+          <Text style={styles.registerIdButtonText}>Register PWD/Senior ID</Text>
+          <Ionicons name="chevron-forward" size={24} color="#666" />
+        </TouchableOpacity>
+
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity
+            style={commonStyles.button}
+            onPress={handleUpdateProfile}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={commonStyles.buttonText}>Confirm Changes</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollViewContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary, // Header background color
   },
-  readOnlyInput: {
-    backgroundColor: '#f0f0f0', // Slightly different background for read-only fields
-    color: '#888',
-  }
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 50, // Adjust for status bar
+    paddingBottom: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'space-between',
+  },
+  backIcon: {
+    padding: 5,
+  },
+  notificationBell: {
+    padding: 5,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    backgroundColor: colors.white, // White background for the content area
+    borderTopLeftRadius: 0, // No border radius
+    borderTopRightRadius: 0, // No border radius
+    paddingVertical: 20,
+    paddingHorizontal: 0, // Individual rows will have horizontal padding
+    alignItems: "center",
+  },
+  profilePictureSection: {
+    alignItems: "center",
+    marginBottom: 30,
+    marginTop: 10,
+  },
+  nameEditContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginRight: 10,
+  },
+  userNameInput: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginRight: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    minWidth: 150,
+    textAlign: 'center',
+  },
+  userAccountType: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 5,
+  },
+  verifiedStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  verifiedText: {
+    fontSize: 14,
+    color: "#007bff",
+    fontWeight: '600',
+    marginLeft: 5,
+  },
+  detailsContainer: {
+    width: "100%",
+    backgroundColor: colors.white,
+    marginBottom: 30,
+  },
+  detailRow: {
+    width: '100%',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingHorizontal: 20, // Padding for content within the row
+  },
+  lastDetailRow: {
+    borderBottomWidth: 0,
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginBottom: 8,
+  },
+  valueEditContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: "#555",
+    flex: 1, // Allow text to take space
+  },
+  detailValueInput: {
+    fontSize: 16,
+    color: "#555",
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 2,
+  },
+  touchableDetailValue: {
+    flex: 1, // Make the touchable area expand
+    paddingVertical: 2, // Add some padding for easier tap
+  },
+  registerIdButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    padding: 15,
+    borderRadius: 0, // No border radius
+    marginBottom: 30,
+    width: '100%',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  registerIdButtonText: {
+    flex: 1, // Take up available space
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    marginLeft: 15,
+  },
+  bottomButtonContainer: {
+    width: '80%', // Match the width of the button in commonStyles
+    alignSelf: 'center', // Center the container
+    marginBottom: 30, // Space from bottom
+  },
 });
 
 export default ProfileUpdateScreen;
