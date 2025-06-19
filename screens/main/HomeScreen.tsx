@@ -105,7 +105,7 @@ export default function HomeScreen() {
   const handleVolunteerSpecificAction = () => {
     if (isVolunteer) {
       // If a volunteer, navigate to Current Tasks screen
-      navigation.navigate('CurrentTasks'); // You'll need to define 'CurrentTasks' in your App.tsx stack
+      navigation.navigate('VolunteerNow'); // You'll need to define 'CurrentTasks' in your App.tsx stack
     } else {
       // If not a volunteer, navigate to the application process
       navigation.navigate('DataPrivacyConsent');
