@@ -65,8 +65,9 @@ const FinalRemindersScreen = ({ navigation, route }: any) => {
         }
       };
 
-      console.log("FinalRemindersScreen: Attempting to complete registration for userId:", userData.userId);
-      console.log("FinalRemindersScreen: user token:", userToken);
+      console.log("FinalRemindersScreen: Preparing to complete registration with finalUserData:", finalUserData);
+      // console.log("FinalRemindersScreen: Attempting to complete registration for userId:", userData.userId);
+      // console.log("FinalRemindersScreen: user token:", userToken);
       if (!userToken) {
         console.error("FinalRemindersScreen: userToken is missing! Cannot complete registration.");
         Alert.alert("Error", "User token is missing. Please restart the registration process.");

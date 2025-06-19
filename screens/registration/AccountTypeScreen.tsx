@@ -44,12 +44,13 @@ const AccountTypeScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             ))}
 
+
             <View style={styles.divider} />
 
             <Text style={styles.childText}>Are you registering for a child/minor?</Text>
           </View>
 
-          <View style={commonStyles.bottomButton}>
+          <View>
             <TouchableOpacity style={styles.childButton} onPress={handleChildRegistration}>
               <Text style={commonStyles.buttonText}>Register for a Child/Minor</Text>
             </TouchableOpacity>
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 250,
+    marginBottom: 190,
   },
 })
 

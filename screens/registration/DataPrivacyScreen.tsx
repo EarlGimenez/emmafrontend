@@ -23,7 +23,6 @@ const DataPrivacyScreen = ({ navigation }: any) => {
 
         <View style={commonStyles.whiteContainer}>
           <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContent}>
-            <Text style={commonStyles.title}>Data Privacy Notice</Text>
 
             <View style={styles.contentContainer}>
               <Text style={commonStyles.subtitle}>What We Collect</Text>

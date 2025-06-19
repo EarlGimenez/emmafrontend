@@ -85,8 +85,7 @@ const AccountSetupScreen = ({ navigation, route }: any) => {
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={commonStyles.title}>Account Setup</Text>
+          <ScrollView showsVerticalScrollIndicator={false} style={{paddingTop: 20}}>
 
             <View style={commonStyles.fieldContainer}>
                 <Text style={commonStyles.fieldLabel}>Mobile Number</Text>

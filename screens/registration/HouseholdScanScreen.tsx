@@ -113,7 +113,7 @@ const handleBarCodeScanned = async ({ data }: { data: string }) => {
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>Household Information</Text>
+          <Text style={commonStyles.backButtonText}>Household</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

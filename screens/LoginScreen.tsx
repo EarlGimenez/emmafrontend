@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../styles/commonStyles";
 import { fetcher } from "@/utils/fetcher";
@@ -53,7 +53,10 @@ const LoginScreen = ({ navigation }: any) => {
         <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.circle}>
           <View style={styles.welcomeContainer}>
             <View style={styles.iconContainer}>
-              <Text style={styles.iconText}>📱</Text>
+                <Image
+                source={require("../assets/images/emma.png")}
+                style={{ width: 80, height: 130, resizeMode: "contain" }}
+                />
             </View>
             <View style={styles.textContainer}>
               <Text style={styles.welcomeText}>Welcome to</Text>
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeContainer: {
-    paddingTop: 200,
+    paddingTop: 310,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -155,7 +158,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   emmaText: {
-    fontSize: 32,
+    fontSize: 41,
+    fontStyle: "italic",
     fontWeight: "bold",
     color: colors.white,
     marginBottom: 5,
@@ -269,7 +273,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "absolute",
     bottom: 30,
-    left: 50,
+    left: 30,
     right: 40,
   },
 });

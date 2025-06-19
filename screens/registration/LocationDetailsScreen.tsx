@@ -252,7 +252,7 @@ const handleConfirm = useCallback(() => {
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backArrow}>←</Text>
-          <Text style={commonStyles.backButtonText}>Location Details</Text>
+          <Text style={commonStyles.backButtonText}>Location</Text>
         </TouchableOpacity>
         <View style={commonStyles.whiteContainer}>
           <Text style={commonStyles.title}>Location and Evacuation Details</Text>

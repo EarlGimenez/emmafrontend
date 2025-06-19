@@ -133,17 +133,27 @@ export default function CustomDrawerContent(props: any) {
         )}
       </View>
       <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollViewContent}>
-        <DrawerItemList {...props} />
-        {/* Additional Drawer Items */}
-        {userData?.status === 'active' && isVolunteer && (
-          <DrawerItem
-            label="My Volunteer Dashboard"
-            onPress={() => navigation.navigate('VolunteerHome')} // Assuming you have a VolunteerHome screen
-            icon={({ color, size }) => (
-              <Ionicons name="compass-outline" size={size} color={color} />
-            )}
-          />
-        )}
+        {props.state.routeNames.map((routeName: string, index: number) => {
+          if (routeName === 'Trainings') {
+        // Only show Trainings if user is a volunteer
+        if (!isVolunteer) {
+          return null;
+        }
+          }
+          const focused = props.state.index === index;
+          const { drawerLabel, drawerIcon } = props.descriptors[props.state.routes[index].key].options;
+          return (
+        <DrawerItem
+          key={routeName}
+          label={drawerLabel ?? routeName}
+          focused={focused}
+          icon={drawerIcon}
+          onPress={() => props.navigation.navigate(routeName)}
+          style={styles.drawerItem}
+          labelStyle={styles.drawerItemText}
+        />
+          );
+        })}
       </DrawerContentScrollView>
       <View style={styles.footer}>
         <DrawerItem
@@ -228,11 +238,11 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   drawerItem: {
-    paddingVertical: 10,
+    paddingVertical: 5,
     paddingHorizontal: 20,
   },
   drawerItemText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '500',
     color: '#333',
   },

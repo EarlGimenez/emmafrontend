@@ -25,6 +25,7 @@ export default function HomeScreen() {
         if (apiUserData && !apiUserData.error) {
           setUserData(apiUserData);
           setIsVolunteer(apiUserData.account_type === 'volunteer');
+          setTrackingEnabled(apiUserData.tracking_enabled || false);
           if (apiUserData.account_type === 'volunteer' && typeof apiUserData.is_available_for_tasks === 'boolean') {
             setIsAvailableForTasks(apiUserData.is_available_for_tasks);
           }
@@ -64,7 +65,21 @@ export default function HomeScreen() {
     return unsubscribe;
   }, [navigation]);
 
-  const toggleTracking = () => setTrackingEnabled(previousState => !previousState);
+  const toggleTracking = () => {
+    setTrackingEnabled(previousState => !previousState)
+    try {
+      const response = fetcher(
+        API_URLS.users.toggle_tracking(userData?.id),
+        {
+          method: 'PUT',
+          body: JSON.stringify({ enabled: !trackingEnabled }),
+        }
+      );
+    } catch (error) {
+      console.error("Failed to toggle tracking:", error);
+      Alert.alert("Error", "Failed to update tracking status. Please try again.");
+    }
+  };
 
   const toggleAvailability = async () => {
     const newAvailability = !isAvailableForTasks;
@@ -102,7 +117,7 @@ export default function HomeScreen() {
 
   const handleVolunteerSpecificAction = () => {
     if (isVolunteer) {
-      navigation.navigate('CurrentTasks');
+      navigation.navigate('VolunteerNow');
     } else {
       navigation.navigate('DataPrivacyConsent');
     }

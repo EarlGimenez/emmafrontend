@@ -36,6 +36,7 @@ export const API_URLS = {
     temp: `${BASE_URL}/users/temp`, // If still using this flow
     complete: (userId: string | number) => `${BASE_URL}/users/${userId}/complete`,
     profile: `${BASE_URL}/profile`, // For fetching authenticated user profile
+    toggle_tracking: (userId: string | number) => `${BASE_URL}/toggle-tracking`,
   },
   mapGeoCode: {
     geocode: `${BASE_URL}/geocode`,
