@@ -1,25 +1,50 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { colors } from "../styles/commonStyles"
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../styles/commonStyles";
+import { fetcher } from "@/utils/fetcher";
+import { API_URLS } from "@/config/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }: any) => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    // Simulate authentication with userId 1
-    await AsyncStorage.setItem('userId', '1');
-    navigation.navigate("Landing");
+    setLoading(true);
+    try {
+      const response = await fetcher(API_URLS.auth.login, {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+    // await AsyncStorage.setItem('userId', '1');
+    // navigation.navigate("Landing");
+
+      if (response.success && response.access_token && response.user) {
+        await AsyncStorage.setItem("userToken", response.access_token);
+        await AsyncStorage.setItem("userData", JSON.stringify(response.user));
+        
+        Alert.alert("Success", "Logged in successfully!");
+        // --- FIX: Navigate to MainAppDrawer instead of Home ---
+        navigation.replace("MainAppDrawer"); 
+        // --- END FIX ---
+      } else {
+        throw new Error(response.message || "Login failed. Please check your credentials.");
+      }
+    } catch (error: any) {
+      console.error("Login error in component:", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegister = () => {
-    navigation.navigate("DataPrivacy")
-  }
+    navigation.navigate("DataPrivacy");
+  };
 
   return (
     <View style={styles.container}>
@@ -60,8 +85,8 @@ const LoginScreen = ({ navigation }: any) => {
           />
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Logging In..." : "Login"}</Text>
         </TouchableOpacity>
 
         <View style={styles.optionsContainer}>
@@ -89,8 +114,8 @@ const LoginScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -246,6 +271,6 @@ const styles = StyleSheet.create({
     left: 50,
     right: 40,
   },
-})
+});
 
-export default LoginScreen
+export default LoginScreen;
