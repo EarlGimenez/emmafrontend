@@ -13,7 +13,8 @@ const BASE_URL = __DEV__
   ? `http://${DEV_IP}:${DEV_PORT}/api`
   : PROD_URL
 
-export const API_URLS = {  family: {
+export const API_URLS = {  
+  family: {
     current: `${BASE_URL}/family/current`,
     get: (id: string) => `${BASE_URL}/family/${id}`,
     join: `${BASE_URL}/join-family`,

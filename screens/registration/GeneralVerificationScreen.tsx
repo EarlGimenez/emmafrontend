@@ -6,6 +6,9 @@ import { LinearGradient } from "expo-linear-gradient"
 import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
 import { colors, commonStyles } from "../../styles/commonStyles"
+import { fetcher } from "@/utils/fetcher";
+import { API_URLS } from "@/config/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const GeneralVerificationScreen = ({ navigation, route }: any) => {
   const { userData } = route.params
@@ -34,28 +37,50 @@ const GeneralVerificationScreen = ({ navigation, route }: any) => {
     }
   }
 
-    const handleNext = () => {
-    if (!primaryIdType || !primaryImage) {
-      alert("Please upload at least a primary ID")
-      return
-    }
+    const handleNext = async () => {
+  if (!primaryIdType || !primaryImage) {
+    alert("Please upload at least a primary ID")
+    return
+  }
 
-    const verifiedUserData = {
-      ...userData,
-      verificationDetails: {
-        primaryId: {
-          type: primaryIdType,
-          image: primaryImage
-        },
-        secondaryId: secondaryIdType ? {
-          type: secondaryIdType,
-          image: secondaryImage
-        } : undefined,
-        verificationStatus: "verified",
-        verifiedAt: new Date().toISOString()
-      }
+  const verifiedUserData = {
+    ...userData,
+    verificationDetails: {
+      primaryId: {
+        type: primaryIdType,
+        image: primaryImage
+      },
+      secondaryId: secondaryIdType ? {
+        type: secondaryIdType,
+        image: secondaryImage
+      } : undefined,
+      verificationStatus: "verified",
+      verifiedAt: new Date().toISOString()
     }
+  }
 
+  try {
+    // Optionally get token if needed for auth
+    const userToken = await AsyncStorage.getItem("userToken");
+
+    const response = await fetcher(API_URLS.users.complete(userData.userId), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(userToken ? { "Authorization": `Bearer ${userToken}` } : {})
+      },
+      body: JSON.stringify(verifiedUserData),
+    });
+
+    if (response.success) {
+      navigation.navigate("AdditionalInfo", { userData: verifiedUserData });
+    } else {
+      alert(response.message || "Verification failed. Please try again.");
+    }
+  } catch (error: any) {
+    alert(error.message || "An error occurred during verification.");
+  }
+  
     navigation.navigate("AdditionalInfo", { userData: verifiedUserData })
   }
   

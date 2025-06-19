@@ -85,11 +85,11 @@ export default function HomeScreen() {
   };
 
   const handleTrackFamilyMember = () => {
-    navigation.navigate('MyFamily');
+    navigation.navigate('TrackFamily');
   };
 
   const handleJoinFamily = () => {
-    navigation.navigate('MyFamily');
+    navigation.navigate('CheckFamily');
   };
 
   const handleDonateNow = () => {

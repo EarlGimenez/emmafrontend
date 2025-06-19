@@ -15,8 +15,10 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../../styles/commonStyles";
 import MapView, { Marker } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
 import { API_URLS } from "@/config/api";
 import { getUserId } from "@/utils/storage";
+import { DrawerActions } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,6 +34,7 @@ const TrackFamilyScreen = ({ route, navigation }: any) => {
   // Helper to fetch and center location
   const fetchAndCenterLocation = useCallback(async (member: any) => {
     if (!member || !member.locationSharingEnabled) {
+      console.log(member.locationSharingEnabled)
       setMemberLocation(null);
       return;
     }
@@ -123,20 +126,21 @@ const TrackFamilyScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={styles.container}
-    >
+    <View
+          style={[styles.container, {backgroundColor: colors.primary}]}
+        >
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
-          <Text style={styles.menuIcon}>☰</Text>
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.menuIcon}>
+          <Ionicons name="menu" size={30} color={colors.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.notificationButton}
           onPress={handleNotifications}
         >
-          <Text style={styles.notificationIcon}>🔔</Text>
+          <TouchableOpacity onPress={() => console.log('Notification Bell Pressed')} style={styles.notificationBell}>
+          <Ionicons name="notifications" size={26} color={colors.white} />
+        </TouchableOpacity>
         </TouchableOpacity>
       </View>
 
@@ -229,7 +233,7 @@ const TrackFamilyScreen = ({ route, navigation }: any) => {
             ))}
           </ScrollView>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -275,9 +279,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   menuIcon: {
-    fontSize: 24,
-    color: colors.white,
-    fontWeight: "bold",
+    padding: 5,
   },
   notificationButton: {
     padding: 10,
@@ -301,6 +303,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
+  },
+  notificationBell: {
+    padding: 5,
   },
   selectedMemberText: {
     fontSize: 14,

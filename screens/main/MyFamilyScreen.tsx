@@ -15,7 +15,9 @@ import {
   Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors } from "../../styles/commonStyles";
+import { colors, commonStyles } from "../../styles/commonStyles";
+import { DrawerActions } from "@react-navigation/native";
+import { Ionicons } from '@expo/vector-icons';
 
 const MyFamilyScreen = ({ navigation }: any) => {
   const [familyData, setFamilyData] = useState<any>(null);
@@ -176,22 +178,23 @@ const handleShareFamilyCode = async () => {
   };
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={styles.container}
+    <View
+      style={[styles.container, {backgroundColor: colors.primary}]}
     >
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={handleNotifications}
-        >
-          <Text style={styles.notificationIcon}>🔔</Text>
-        </TouchableOpacity>
-      </View>
+              <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.menuIcon}>
+                <Ionicons name="menu" size={30} color={colors.white} />
+              </TouchableOpacity>
+      
+              <TouchableOpacity
+                style={styles.notificationButton}
+                onPress={handleNotifications}
+              >
+                <TouchableOpacity onPress={() => console.log('Notification Bell Pressed')} style={styles.notificationBell}>
+                <Ionicons name="notifications" size={26} color={colors.white} />
+              </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
 
       <View style={styles.mainWhiteContainer}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -274,7 +277,7 @@ const handleShareFamilyCode = async () => {
           </TouchableOpacity>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -333,16 +336,13 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   menuIcon: {
-    fontSize: 24,
-    color: colors.white,
-    fontWeight: "bold",
+    padding: 5,
   },
   notificationButton: {
     padding: 10,
   },
-  notificationIcon: {
-    fontSize: 24,
-    color: colors.white,
+  notificationBell: {
+    padding: 5,
   },
   mainWhiteContainer: {
     backgroundColor: colors.white,
