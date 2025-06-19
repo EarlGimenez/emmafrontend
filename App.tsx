@@ -32,7 +32,6 @@ import VolunteerApplicationSubmittedScreen from "./screens/volunteer/VolunteerAp
 import VolunteerBackgroundCheckScreen from "./screens/volunteer/VolunteerBackgroundCheckScreen"
 import VolunteerExperienceScreen from "./screens/volunteer/VolunteerExperienceScreen"
 import ProfileScreen from "./screens/main/ProfileScreen"
-import MyFamilyScreen from "./screens/main/MyFamilyScreen"
 import TrainingsScreen from "./screens/main/TrainingsScreen";
 import DonateScreen from "./screens/main/DonateScreen";
 import RequestEntryScreen from './screens/requests/RequestEntryScreen';
@@ -56,7 +55,6 @@ function MainAppDrawer() {
           When MainAppDrawer is navigated to, HomeScreen will be shown by default. */}
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="MyFamily" component={MyFamilyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Trainings" component={TrainingsScreen} options={{ headerShown: false }} />
       {/* Add other screens that should be accessible directly from the drawer here.
           For example, if you had a "ProfileScreen" that also needed to open the drawer:
