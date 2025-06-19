@@ -150,8 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: 16, // Equivalent to rounded-lg
     overflow: 'hidden',
     backgroundColor: '#1E78AD',
-    marginHorizontal: 16, // Equivalent to mx-4
-    marginVertical: 20, // Some vertical margin for the whole app container
     elevation: 8, // Equivalent to shadow-lg for Android
   },
   filterContainer: {
