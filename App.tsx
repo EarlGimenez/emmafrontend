@@ -25,6 +25,11 @@ import EvacuationDetailsScreen from "./screens/registration/EvacuationDetailsScr
 import AccountSetupScreen from "./screens/registration/AccountSetupScreen"
 import AccountSuccessScreen from "./screens/registration/AccountSuccessScreen"
 import FinalRemindersScreen from "./screens/registration/FinalRemindersScreen"
+import LandingScreen from "./screens/main/LandingScreen"
+import CheckFamilyScreen from "./screens/main/CheckFamilyScreen"
+import CreateFamilyScreen from "./screens/main/CreateFamilyScreen"
+import MyFamilyScreen from "./screens/main/MyFamilyScreen"
+import TrackFamilyScreen from "./screens/main/TrackFamilyScreen"
 import HomeScreen from "./screens/main/HomeScreen" // This will be the initial screen inside the Drawer Navigator
 import CustomDrawerContent from './components/screen_components/CustomDrawerContent'; // Import your custom drawer content
 import DataPrivacyConsentScreen from "./screens/volunteer/DataPrivacyConsentScreen"
@@ -38,6 +43,7 @@ import RequestEntryScreen from './screens/requests/RequestEntryScreen';
 import RequestProcessScreen from './screens/requests/RequestProcessScreen';
 import MyRequestsScreen from './screens/requests/MyRequestsScreen';
 import VolunteerNowScreen from "./screens/volunteer/VolunteerNowScreen";
+import ProfileUpdateScreen from "./screens/main/ProfileUpdateScreen";
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator(); // Create a Drawer Navigator instance
@@ -56,6 +62,7 @@ function MainAppDrawer() {
           When MainAppDrawer is navigated to, HomeScreen will be shown by default. */}
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MyFamily" component={MyFamilyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Trainings" component={TrainingsScreen} options={{ headerShown: false }} />
       {/* Add other screens that should be accessible directly from the drawer here.
           For example, if you had a "ProfileScreen" that also needed to open the drawer:
@@ -113,6 +120,12 @@ export default function App() {
         <Stack.Screen name="AccountSetup" component={AccountSetupScreen} />
         <Stack.Screen name="AccountSuccess" component={AccountSuccessScreen} />
         <Stack.Screen name="FinalReminders" component={FinalRemindersScreen} />
+        <Stack.Screen name="Landing" component={LandingScreen} />
+        <Stack.Screen name="CheckFamily" component={CheckFamilyScreen} />
+        <Stack.Screen name="CreateFamily" component={CreateFamilyScreen} />
+        <Stack.Screen name="MyFamily" component={MyFamilyScreen} />
+        <Stack.Screen name="TrackFamily" component={TrackFamilyScreen} />
+        <Stack.Screen name="ProfileUpdate" component={ProfileUpdateScreen} />
 
         <Stack.Screen name="DataPrivacyConsent" component={DataPrivacyConsentScreen} />
         <Stack.Screen name="VolunteerApplicationSubmitted" component={VolunteerApplicationSubmittedScreen} />

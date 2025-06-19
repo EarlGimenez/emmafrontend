@@ -21,8 +21,11 @@ const LoginScreen = ({ navigation }: any) => {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+    
+    // navigation.navigate("Landing");
 
       if (response.success && response.access_token && response.user) {
+        await AsyncStorage.setItem('userId', response.user.id.toString());
         await AsyncStorage.setItem("userToken", response.access_token);
         await AsyncStorage.setItem("userData", JSON.stringify(response.user));
         

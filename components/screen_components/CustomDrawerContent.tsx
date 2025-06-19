@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetcher } from '@/utils/fetcher'; // Import your fetcher utility
 import { API_URLS } from '@/config/api'; // Import your API_URLS
+import { colors } from '@/styles/commonStyles';
 
 export default function CustomDrawerContent(props: any) {
   const navigation = useNavigation<any>();
@@ -146,13 +147,6 @@ export default function CustomDrawerContent(props: any) {
       </DrawerContentScrollView>
       <View style={styles.footer}>
         <DrawerItem
-          label="Settings"
-          onPress={() => navigation.navigate('Settings')} // Assuming you have a Settings screen
-          icon={({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          )}
-        />
-        <DrawerItem
           label="Logout"
           onPress={handleLogout}
           icon={({ color, size }) => (
@@ -181,7 +175,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   header: {
-    backgroundColor: '#34495e', // Dark header background
+    backgroundColor: colors.primary, // Dark header background
     padding: 20,
     alignItems: 'center',
     paddingTop: 60,
@@ -238,7 +232,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   drawerItemText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '500',
     color: '#333',
   },
@@ -246,5 +240,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
     paddingVertical: 10,
+    paddingBottom: 25,
   },
 });

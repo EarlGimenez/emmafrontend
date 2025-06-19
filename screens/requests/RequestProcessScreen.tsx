@@ -128,7 +128,7 @@ const RequestDetailsRoute = ({ onUpdate, requestDetails, jumpTo, goBackToNeeds }
       <Text style={styles.tabSectionTitle}>Request Details</Text>
 
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontWeight: "bold", color: colors.primary, marginBottom: 8, fontSize: 16 }}>
+      <Text style={{ fontWeight: "bold", color: colors.primary, marginBottom: 8, fontSize: 14 }}>
         Selected Needs: (Please Specify details)
       </Text>
       <TextInput
@@ -384,7 +384,7 @@ const RequestProcessScreen = () => {
   const [index, setIndex] = useState(0); // Current tab index
   const [routes] = useState([
     { key: 'needs', title: 'Needs' },
-    { key: 'requestDetails', title: 'Request Details' },
+    { key: 'requestDetails', title: 'Details' },
     { key: 'submit', title: 'Submit' },
   ]);
 
@@ -450,17 +450,12 @@ const RequestProcessScreen = () => {
   );
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
-      <View style={commonStyles.container}>
+      <View style={[commonStyles.container, {backgroundColor: colors.primary}]}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backButtonText}>← Request Assistance</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>
-          <Text style={commonStyles.title}>Request Assistance</Text>
           <TabView
             navigationState={{ index, routes }}
             renderScene={({ route }) => renderScene[route.key]()}
@@ -471,7 +466,6 @@ const RequestProcessScreen = () => {
           />
         </View>
       </View>
-    </LinearGradient>
   );
 };
 

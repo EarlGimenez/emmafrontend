@@ -131,10 +131,7 @@ const MyRequestsScreen = () => {
   }
 
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      style={commonStyles.mainThemeBackground}
-    >
+    <View style={[commonStyles.container, {backgroundColor: colors.primary}]}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backButtonText}>← My Requests</Text>
@@ -142,7 +139,6 @@ const MyRequestsScreen = () => {
 
         <View style={commonStyles.whiteContainer}>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            <Text style={commonStyles.title}>My Assistance Requests</Text>
 
             {myRequests.length === 0 ? (
               <Text style={styles.noRequestsText}>You have no assistance requests yet.</Text>
@@ -183,16 +179,16 @@ const MyRequestsScreen = () => {
               <ScrollView contentContainerStyle={{ paddingHorizontal: 10 }}>
                 <Text style={styles.modalTitle}>{selectedRequest.requestType}</Text>
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Date of Request:</Text>
-                  <Text style={styles.modalDetailValue}>{selectedRequest.dateOfRequest}</Text>
+                  <Text style={[styles.modalDetailLabel, {minWidth: 40}]}>Date of Request:</Text>
+                  <Text style={[styles.modalDetailValue, {textAlign: 'right'}]}>{selectedRequest.dateOfRequest}</Text>
                 </View>
                 <View style={styles.modalDetailRow}>
                   <Text style={styles.modalDetailLabel}>Status:</Text>
-                  <Text style={[styles.modalDetailValue, getStatusStyle(selectedRequest.status)]}>
+                  <Text style={[styles.modalDetailValue, getStatusStyle(selectedRequest.status), {textAlign: 'right'}]}>
                     {selectedRequest.status.toUpperCase()}
                   </Text>
                 </View>
-                <View style={styles.modalDetailRow}>
+                <View>
                   <Text style={styles.modalDetailLabel}>Description:</Text>
                   <Text style={styles.modalDetailValue}>{selectedRequest.description}</Text>
                 </View>
@@ -244,7 +240,7 @@ const MyRequestsScreen = () => {
           </View>
         </View>
       </Modal>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -263,6 +259,7 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+    paddingTop: 35,
   },
   noRequestsText: {
     fontSize: 16,
@@ -376,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#555',
     flex: 2,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   modalDetailBlock: {
     marginTop: 10,

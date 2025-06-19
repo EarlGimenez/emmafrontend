@@ -10,6 +10,12 @@ export const colors = {
 }
 
 export const commonStyles = StyleSheet.create({
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 10
+  },
   mainThemeBackground: {
     flex: 1,
     backgroundColor: colors.gradientStart,
@@ -22,9 +28,9 @@ export const commonStyles = StyleSheet.create({
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
     flex: 1,
-    marginTop: "10%", // 80% of the view
+    marginTop: 20, // 80% of the view
     paddingTop: 20,
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 28,
@@ -87,7 +93,7 @@ export const commonStyles = StyleSheet.create({
   },
   backButtonText: {
     color: colors.white,
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "bold",
     marginLeft: 10,
     marginTop: 20,

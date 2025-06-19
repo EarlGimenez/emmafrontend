@@ -15,7 +15,39 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
   const [contactNumber, setContactNumber] = useState("")
   const [emailAddress, setEmailAddress] = useState("")
 
+
+  const handleSkip = () => {
+  const skipUserData = {
+    accountType,
+    fullName: "Test User",
+    dateOfBirth: "01/01/2000",
+    contactNumber: "1234567890",
+    emailAddress: "test@example.com",
+    userId: "SKIP_" + new Date().getTime(),
+    timestamp: new Date().toISOString(),
+  }
+
+  switch (accountType) {
+    case "pwd":
+      navigation.navigate("PWDVerification", { userData: skipUserData });
+      break;
+    case "senior":
+      navigation.navigate("SeniorVerification", { userData: skipUserData });
+      break;
+    case "parent":
+    case "general":
+      navigation.navigate("GeneralVerification", { userData: skipUserData });
+      break;
+    default:
+      navigation.navigate("GeneralVerification", { userData: skipUserData });
+  }
+}
+
+
+
+
    const handleNext = async () => {
+
     try {
       const response = await fetcher(API_URLS.users.temp, {
         method: "POST",
@@ -145,10 +177,26 @@ const BasicInfoScreen = ({ navigation, route }: any) => {
             </View>
           </View>
 
-          <View style={commonStyles.bottomButton}>
+          {/* <View style={commonStyles.bottomButton}>
             <TouchableOpacity style={commonStyles.button} onPress={handleNext}>
               <Text style={commonStyles.buttonText}>Next</Text>
             </TouchableOpacity>
+          </View> */}
+          <View style={commonStyles.bottomButton}>
+            <View style={commonStyles.buttonRow}>
+              <TouchableOpacity 
+                style={[commonStyles.button, { backgroundColor: colors.secondary }]} 
+                onPress={handleSkip}
+              >
+                <Text style={commonStyles.buttonText}>Skip</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={commonStyles.button} 
+                onPress={handleNext}
+              >
+                <Text style={commonStyles.buttonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>

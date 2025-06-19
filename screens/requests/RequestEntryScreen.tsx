@@ -73,19 +73,14 @@ const RequestEntryScreen = () => {
     >
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Assistance Center</Text>
+          <Text style={commonStyles.backButtonText}>←</Text>
         </TouchableOpacity>
 
-        <View style={commonStyles.whiteContainer}>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            <Text style={commonStyles.title}>Assistance Center</Text>
 
             <View style={styles.welcomeSection}>
               <Text style={styles.welcomeMessage}>Hello {userName},</Text>
               <Text style={styles.welcomeMessage}>Welcome to Assistance Center!</Text>
-            </View>
-            <View style={{ width: 200, height: 200, backgroundColor: colors.fieldBg, borderRadius: 20, marginBottom: 40, justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: colors.primary, fontSize: 24, fontWeight: 'bold' }}>[Image Placeholder]</Text>
             </View>
 
             <View style={styles.buttonContainer}>
@@ -96,8 +91,13 @@ const RequestEntryScreen = () => {
                 <Text style={styles.actionButtonText}>My Requests</Text>
               </TouchableOpacity>
             </View>
+
+            <Image
+              source={require('../../assets/images/give.png')}
+              style={styles.heroImage}
+              accessibilityLabel="Assistance Center Hero"
+            />
           </ScrollView>
-        </View>
       </View>
     </LinearGradient>
   );
@@ -116,9 +116,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   scrollViewContent: {
+    flex: 1,
+    paddingTop: 40,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 100,
     alignItems: "center",
+    justifyContent: "space-between",
   },
   welcomeSection: {
     marginBottom: 30,
@@ -128,13 +131,13 @@ const styles = StyleSheet.create({
   welcomeMessage: {
     fontSize: 22,
     fontWeight: "bold",
-    color: colors.primary,
+    color: '#fff',
     textAlign: "center",
     marginBottom: 5,
   },
   heroImage: {
-    width: 200, // Adjust size as needed
-    height: 200, // Adjust size as needed
+    width: 150, // Adjust size as needed
+    height: 150, // Adjust size as needed
     resizeMode: 'contain',
     marginBottom: 40,
   },
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   actionButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#D6F9FF',
     paddingVertical: 15,
     borderRadius: 15,
     alignItems: "center",
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   actionButtonText: {
-    color: colors.white,
+    color: '#0C3146',
     fontSize: 18,
     fontWeight: "600",
   },
