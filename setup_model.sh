@@ -48,7 +48,12 @@ if curl -L --fail --show-error --progress-bar -o "$FULL_PATH" "$MODEL_URL"; then
     
     # Verify the download
     if [ -f "$FULL_PATH" ]; then
-        file_size=$(stat -f%z "$FULL_PATH" 2>/dev/null || stat -c%s "$FULL_PATH" 2>/dev/null || echo "unknown")
+        # Get file size in a portable way
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            file_size=$(stat -f%z "$FULL_PATH")
+        else
+            file_size=$(stat -c%s "$FULL_PATH")
+        fi
         echo "📊 Downloaded file size: $file_size bytes"
         echo "🎉 Setup complete! Your offline chatbot is ready to use."
         echo ""
