@@ -42,6 +42,7 @@ import DonateScreen from "./screens/main/DonateScreen";
 import RequestEntryScreen from './screens/requests/RequestEntryScreen';
 import RequestProcessScreen from './screens/requests/RequestProcessScreen';
 import MyRequestsScreen from './screens/requests/MyRequestsScreen';
+import DisasterReliefChatScreen from './screens/DisasterReliefChatScreen';
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator(); // Create a Drawer Navigator instance
@@ -59,8 +60,9 @@ function MainAppDrawer() {
       {/* HomeScreen is the first screen within the drawer.
           When MainAppDrawer is navigated to, HomeScreen will be shown by default. */}
       <Drawer.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Trainings" component={TrainingsScreen} options={{ headerShown: false }} />
+      <Drawer.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Drawer.Screen name="Trainings" component={TrainingsScreen} options={{ headerShown: false }} />
+      <Drawer.Screen name="EmergencyChat" component={DisasterReliefChatScreen} options={{ headerShown: false }} />
       {/* Add other screens that should be accessible directly from the drawer here.
           For example, if you had a "ProfileScreen" that also needed to open the drawer:
           <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
@@ -133,6 +135,7 @@ export default function App() {
         <Stack.Screen name="RequestEntry" component={RequestEntryScreen} />
         <Stack.Screen name="RequestProcess" component={RequestProcessScreen} />
         <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
+        <Stack.Screen name="DisasterChat" component={DisasterReliefChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

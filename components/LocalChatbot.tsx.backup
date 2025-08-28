@@ -658,9 +658,30 @@ const LocalChatbot = () => {
 
       // Create a 911 emergency dispatch prompt with proper Gemma-3 formatting
       const prompt = `<bos><start_of_turn>system
-${MASTER_PROMPT}
 
-Location Context: ${currentLocation}
+You are EMMA (Evacuation Management and Monitoring Assistant) - a 911 emergency dispatch system for ${currentLocation}. 
+
+CRITICAL: Only respond to emergency situations. Decline non-emergency requests politely but firmly.
+
+You should:
+- Act as a professional emergency dispatcher
+- Assess the emergency situation quickly
+- Provide immediate safety instructions
+- Give evacuation routes and shelter locations
+- Mention that "help is being dispatched" when appropriate  
+- Say "your family has been notified" for serious emergencies
+- Provide clear, life-saving guidance
+- Be calm but urgent in tone
+
+Focus on:
+- Immediate safety and life-saving actions
+- Emergency medical response and first aid
+- Natural disaster response (typhoons, earthquakes, floods)
+- Fire safety and evacuation
+- Emergency services coordination
+- Location of hospitals, shelters, evacuation centers
+
+Keep responses brief, clear, and actionable. Always prioritize life safety.
 <end_of_turn>
 <start_of_turn>user
 ${userMessage.text}
@@ -673,14 +694,56 @@ ${userMessage.text}
       // Prioritize RAG responses for faster, more reliable emergency guidance
       if (true) { // Always use RAG responses first - AI model as fallback only
         // Enhanced RAG-style intelligent response system with topic validation (PRIORITY)
-        console.log('🚨 Using enhanced RAG-style emergency responses first (priority for reliability)...');
+        console.log('� Using enhanced RAG-style emergency responses first (priority for reliability)...');
         
         const userText = userMessage.text.toLowerCase();
         
-        // Use modular keyword arrays from data/keywords.ts
+        // Emergency and disaster-related keywords for validation
+        const emergencyKeywords = [
+          // Natural disasters
+          'typhoon', 'storm', 'cyclone', 'hurricane', 'bagyo', 'weather', 'rain', 'wind',
+          'earthquake', 'tremor', 'shake', 'quake', 'lindol', 'seismic',
+          'flood', 'flooding', 'water', 'baha', 'inundation', 'tsunami',
+          'fire', 'smoke', 'burn', 'burning', 'flame', 'sunog', 'blaze',
+          'landslide', 'mudslide', 'avalanche', 'volcanic', 'eruption',
+          
+          // Medical emergencies
+          'first aid', 'medical', 'injury', 'wound', 'bleeding', 'emergency',
+          'unconscious', 'heart attack', 'stroke', 'choking', 'cpr', 'bandage',
+          'broken', 'fracture', 'burn', 'poison', 'overdose', 'allergic',
+          'seizure', 'breathing', 'chest pain', 'ambulance', 'hospital',
+          
+          // Emergency preparedness
+          'supplies', 'kit', 'prepare', 'preparation', 'emergency bag', 'go bag',
+          'evacuation', 'evacuate', 'shelter', 'escape', 'safety', 'rescue',
+          'communication', 'contact', 'radio', 'phone', 'signal',
+          
+          // Common emergency phrases
+          'help', 'urgent', 'crisis', 'disaster', 'emergency', 'danger',
+          'safe', 'safety', 'protect', 'survive', 'survival',
+          
+          // Greetings (allowed for initial interaction)
+          'hello', 'hi', 'hey', 'start', 'begin', 'good morning', 'good afternoon'
+        ];
+        
+        // Check if the query is emergency-related
         const isEmergencyRelated = emergencyKeywords.some(keyword => 
           userText.includes(keyword)
         );
+        
+        // Non-emergency topics that should be declined (add more as needed)
+        const nonEmergencyTopics = [
+          'recipe', 'cooking', 'food recipe', 'how to cook',
+          'movie', 'film', 'entertainment', 'tv show', 'celebrity',
+          'sport', 'football', 'basketball', 'game', 'score',
+          'politics', 'election', 'government', 'president', 'mayor',
+          'business', 'stock', 'investment', 'money', 'finance',
+          'school', 'homework', 'assignment', 'test', 'exam',
+          'love', 'relationship', 'dating', 'romance',
+          'travel', 'vacation', 'holiday', 'tourist',
+          'technology', 'computer', 'software', 'programming',
+          'music', 'song', 'artist', 'album'
+        ];
         
         const isNonEmergencyTopic = nonEmergencyTopics.some(topic => 
           userText.includes(topic)
@@ -688,92 +751,386 @@ ${userMessage.text}
         
         // If it's clearly a non-emergency topic, politely decline
         if (isNonEmergencyTopic && !isEmergencyRelated) {
-          // Add realistic delay for decline response (1-2 seconds)
-          setTimeout(() => {
-            const assistantMessage: Message = {
-              id: Date.now().toString(),
-              text: getDeclineResponse(userMessage.text),
-              sender: 'assistant',
-              timestamp: new Date().toISOString(),
-            };
+          const declineResponse = `## 🚨 EMMA Emergency Dispatch Only
 
-            setMessages(prev => [...prev, assistantMessage]);
-            setIsTyping(false);
-          }, 1500);
+**This is EMMA - Evacuation Management and Monitoring Assistant**
+
+I'm specifically designed for **emergency situations and disaster response**. I cannot assist with "${userMessage.text}".
+
+### 🆘 **I can dispatch help for:**
+• **Natural Disasters**: Typhoons, earthquakes, floods, fires
+• **Medical Emergencies**: Heart attacks, injuries, unconscious persons
+• **Fire/Safety Emergencies**: Building fires, smoke inhalation, evacuations
+• **Emergency Coordination**: Rescue operations, family notifications
+
+### 📞 **IMMEDIATE LIFE THREAT?**
+**Call 911 NOW - then return for emergency guidance**
+
+### 💡 **Emergency Examples:**
+• "Heart attack emergency"
+• "Trapped by flood water"
+• "Building collapsed from earthquake"
+• "House fire - need evacuation route"
+
+**What is your emergency situation?**`;
+
+          const assistantMessage: Message = {
+            id: Date.now().toString(),
+            text: declineResponse,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
           return;
         }
         
         // If the query doesn't contain emergency keywords and isn't clearly non-emergency,
         // gently redirect to emergency topics
         if (!isEmergencyRelated) {
-          // Add realistic delay for redirect response (1-2 seconds)
-          setTimeout(() => {
-            const assistantMessage: Message = {
-              id: Date.now().toString(),
-              text: getRedirectResponse(userMessage.text, currentLocation),
-              sender: 'assistant',
-              timestamp: new Date().toISOString(),
-            };
+          const redirectResponse = `## 🚨 EMMA Emergency Dispatch Ready
 
-            setMessages(prev => [...prev, assistantMessage]);
-            setIsTyping(false);
-          }, 1800);
-          return;
-        }
-        
-        // If we reach here, it's an emergency-related query - proceed with RAG response
-        const botResponse = getEmergencyResponse(userText, currentLocation);
+**Evacuation Management and Monitoring Assistant**
 
-        // Add realistic delay for emergency response (2-3 seconds to simulate dispatch processing)
-        setTimeout(() => {
+I didn't recognize **"${userMessage.text}"** as an emergency situation. 
+
+**I'm EMMA - specialized emergency dispatch for ${currentLocation}.**
+
+### 🆘 **I can coordinate response for:**
+• **Natural Disasters**: Typhoon emergencies, earthquakes, flooding
+• **Medical Emergencies**: Heart attacks, severe injuries, unconscious persons
+• **Fire/Safety**: Building fires, gas leaks, structural collapses
+• **Emergency Rescue**: Trapped persons, evacuation coordination
+
+### 📞 **IMMEDIATE DANGER?**
+**Call 911 NOW - then describe your emergency here**
+
+### 💡 **Emergency Examples:**
+• "Heart attack - need ambulance"
+• "Trapped by flood water"
+• "Building fire - evacuation needed"
+• "Earthquake damage - people trapped"
+• "Severe bleeding emergency"
+
+**What is your emergency situation?**`;
+
           const assistantMessage: Message = {
             id: Date.now().toString(),
-            text: botResponse,
+            text: redirectResponse,
             sender: 'assistant',
             timestamp: new Date().toISOString(),
           };
 
           setMessages(prev => [...prev, assistantMessage]);
-          setIsTyping(false);
+          return;
+        }
+        
+        // If we reach here, it's an emergency-related query - proceed with RAG response
+        const getEmergencyResponse = (query: string, location: string): string => {
+          // Greeting patterns
+          if (/\b(hello|hi|hey|good morning|good afternoon|start|begin)\b/.test(query)) {
+            return `## 🚨 EMMA Emergency Dispatch Online
 
-          // Fallback to AI model only if RAG response doesn't provide specific guidance
-          // (This could be used for complex queries that don't match our pre-defined patterns)
-          if (llamaContext && botResponse.includes("I didn't find a specific emergency protocol")) {
-            console.log('🤖 Falling back to AI model for complex emergency query...');
-            
-            // Set typing indicator back on for AI processing
-            setIsTyping(true);
-            
-            setTimeout(async () => {
-              try {
-                const response = await llamaContext.completion({
-                  prompt: `Emergency dispatch for: ${userMessage.text}. Provide emergency guidance.`,
-                  n_predict: 200,
-                  temperature: 0.7,
-                  top_k: 40,
-                  top_p: 0.9,
-                  stop: ['<end_of_turn>', '<start_of_turn>', 'user', 'User:', 'Human:'],
-                });
+**This is EMMA - Evacuation Management and Monitoring Assistant**
+📍 **Location: **
+� **Emergency Services: ACTIVE**
 
-                if (response.text?.trim()) {
-                  const aiAssistantMessage: Message = {
-                    id: Date.now().toString(),
-                    text: `## 🤖 EMMA AI Emergency Support\n\n${response.text.trim()}`,
-                    sender: 'assistant', 
-                    timestamp: new Date().toISOString(),
-                  };
+### 🆘 **Report Your Emergency:**
+• **Medical Emergency**: "Heart attack", "severe bleeding", "unconscious person"
+• **Natural Disaster**: "Trapped by flood", "building collapse", "typhoon emergency"  
+• **Fire Emergency**: "House fire", "smoke inhalation", "trapped by fire"
+• **Safety Threat**: "Need evacuation", "safe shelter", "emergency rescue"
 
-                  setMessages(prev => [...prev, aiAssistantMessage]);
-                }
-              } catch (aiError) {
-                console.error('AI fallback error:', aiError);
-                // RAG response already sent, no need for additional error handling
-              } finally {
-                setIsTyping(false);
-              }
-            }, 1000); // Additional delay for AI processing
+### 📞 **IMMEDIATE LIFE THREAT?**
+**Call 911 NOW - then return here for additional guidance**
+
+**State the nature of your emergency:**`;
           }
-        }, 2500);
+          
+          // Typhoon/Storm responses
+          if (/\b(typhoon|storm|cyclone|hurricane|bagyo|wind|weather|rain)\b/.test(query)) {
+            return `## 🌀 EMMA TYPHOON EMERGENCY DISPATCH
+
+� **EMERGENCY ALERT: Typhoon response activated**
+📍 **Your location logged for emergency response**
+🚑 **Emergency teams are monitoring weather conditions**
+
+### ⚡ **IMMEDIATE ACTIONS:**
+• **SEEK SHELTER NOW** - Move to strongest building available
+• **STAY AWAY** from windows and glass doors
+• **DO NOT GO OUTSIDE** - Even during calm periods (eye of storm)
+• **HAVE EMERGENCY SUPPLIES** ready (water, food, flashlight)
+
+### 🏠 **IF YOU'RE TRAPPED:**
+• Signal for help with whistle or loud noises
+• **Text 911** if calls won't go through
+• **Stay on highest floor** if flooding occurs
+• **Emergency rescue teams dispatched** to affected areas
+
+### 📱 **YOUR FAMILY HAS BEEN NOTIFIED**
+**Emergency alert sent to emergency contacts**
+
+### 🚁 **EVACUATION CENTERS OPEN:**
+• **Cebu City Sports Center** - Capacity: 2,000
+• **University of San Carlos** (multiple campuses)
+• **Barangay halls** throughout the city
+• **Follow evacuation route signs**
+
+### 📞 **EMERGENCY HOTLINES:**
+• **911** - All emergencies
+• **DRRM**: (032) 411-2526
+• **Red Cross**: (032) 418-4823
+
+**Help is being dispatched. Stay safe and follow all evacuation orders.**`;
+          }
+          
+          // Earthquake responses  
+          if (/\b(earthquake|tremor|shake|quake|lindol|seismic)\b/.test(query)) {
+            return `## 🌏 EMMA EARTHQUAKE EMERGENCY RESPONSE
+
+🚨 **EARTHQUAKE DETECTED - Emergency response activated**
+📍 **Seismic monitoring active in your area**
+🚑 **Search and rescue teams are being deployed**
+
+### ⚡ **IF SHAKING NOW - DROP, COVER, HOLD:**
+1. **DROP** to hands and knees immediately
+2. **COVER** head/neck under desk or table
+3. **HOLD ON** and protect yourself from falling objects
+
+### 🏠 **AFTER SHAKING STOPS:**
+• **CHECK FOR INJURIES** - Apply first aid if needed
+• **EXPECT AFTERSHOCKS** - Be ready to drop again
+• **EVACUATE IF BUILDING DAMAGED** 
+• **TURN OFF GAS** if you smell leaks
+
+### � **IF YOU'RE TRAPPED:**
+• **TAP ON PIPES/WALLS** to signal rescuers
+• **SHOUT ONLY AS LAST RESORT** (conserve air)
+• **Cover mouth** to avoid dust inhalation
+• **Emergency rescue teams dispatched** to affected areas
+
+### 📱 **YOUR FAMILY HAS BEEN NOTIFIED**
+**Automatic emergency alert sent to contacts**
+
+### 🏥 **NEAREST EMERGENCY HOSPITALS:**
+• **Cebu Doctors'**: (032) 318-6507
+• **Vicente Sotto Memorial**: (032) 711-3000  
+• **Chong Hua Hospital**: (032) 255-8000
+
+### 🏢 **EVACUATION ASSEMBLY POINTS:**
+• **Fuente Circle** - Open area assembly
+• **Plaza Independencia** - Central meeting point
+• **IT Park Central** - Modern evacuation zone
+
+**Help is on the way. Stay calm and follow safety protocols.**`;
+          }
+          
+          // Flood responses
+          if (/\b(flood|flooding|water|baha|inundation)\b/.test(query)) {
+            return `## 🌊 FLOOD SAFETY PROTOCOL
+
+### 🚨 IMMEDIATE DANGERS:
+• **6 inches** of moving water can knock you down
+• **12 inches** of water can carry away vehicles
+• Flood water contains sewage, chemicals, debris
+
+### 🏃 IMMEDIATE ACTIONS:
+• **Move to higher ground** immediately
+• **NEVER** walk through moving water
+• **NEVER** drive through flooded roads
+• Turn off electricity at main breaker if water threatens home
+
+### 🚗 VEHICLE SAFETY:
+• Turn around if road is flooded
+• **"Turn Around, Don't Drown!"**
+• If trapped in car, move to roof if possible
+• Call for help and wait for rescue
+
+### 🏠 AT HOME:
+• Move to highest floor
+• Bring emergency supplies upstairs
+• Stay away from electrical equipment
+• Have evacuation plan ready
+
+### 💧 AFTER FLOODING:
+• Wait for authorities to declare area safe
+• **Boil water** before drinking or use purification tablets
+• Discard food that contacted flood water
+• Document damage with photos for insurance
+
+### 📍 **Cebu Flood-Prone Areas:**
+• Lahug River vicinity
+• IT Park during heavy rains
+• Colon Street area
+• Parts of Mandaue City
+• Low-lying coastal areas`;
+          }
+          
+          // Medical/First Aid responses
+          if (/\b(first aid|medical|injury|wound|bleeding|unconscious|heart attack|stroke|choking|cpr|bandage)\b/.test(query)) {
+            return `## 🚑 EMMA MEDICAL EMERGENCY DISPATCH
+
+🚨 **MEDICAL EMERGENCY ALERT - Help is being dispatched**
+📍 **Your location transmitted to emergency services**
+🚑 **Ambulance and medical teams are responding**
+
+### 🩸 **SEVERE BLEEDING - IMMEDIATE ACTIONS:**
+1. **APPLY DIRECT PRESSURE** with clean cloth
+2. **ELEVATE** injured area above heart level
+3. **DO NOT REMOVE** embedded objects
+4. **Medical team is en route** - Continue pressure
+
+### 😵 **UNCONSCIOUS PERSON:**
+1. **TAP SHOULDERS AND SHOUT** - Check responsiveness  
+2. **CHECK BREATHING** - Look, listen, feel
+3. **If NO breathing: START CPR** (instructions below)
+4. **Emergency responders dispatched** to your location
+
+### 🫁 **CPR - LIFE-SAVING STEPS:**
+• **Place heel of hand on center of chest**
+• **Push HARD and FAST** - at least 2 inches deep
+• **100-120 compressions per minute**
+• **Emergency medical team ETA 6-8 minutes**
+
+### ❤️ **HEART ATTACK EMERGENCY:**
+• **Symptoms confirmed** - chest pain, shortness of breath
+• **Give aspirin if available** (chew, don't swallow whole)
+• **Cardiac team dispatched** - keep patient calm and seated
+
+### 📱 **YOUR FAMILY HAS BEEN NOTIFIED**
+**Emergency medical alert sent to contacts**
+
+### 🏨 **NEAREST EMERGENCY ROOMS:**
+• **Cebu Doctors'** - 7 minutes away: (032) 318-6507
+• **Vicente Sotto Memorial** - 10 minutes: (032) 711-3000  
+• **Chong Hua Hospital** - 12 minutes: (032) 255-8000
+
+**Medical assistance is on the way. Continue first aid until help arrives.**`;
+          }
+          
+          // Emergency supplies
+          if (/\b(supplies|kit|prepare|preparation|emergency bag|go bag|essentials)\b/.test(query)) {
+            return `## 🎒 EMERGENCY SUPPLY CHECKLIST
+
+### 💧 WATER & FOOD (3-day minimum):
+• **1 gallon water** per person per day
+• Non-perishable food (canned goods, crackers, energy bars)
+• **Manual can opener**
+• Baby formula/food if needed
+• Pet food if applicable
+
+### 🔦 TOOLS & EQUIPMENT:
+• **Flashlight** + extra batteries
+• **Battery/hand-crank radio**
+• First aid kit with medications
+• **Whistle** for signaling help
+• **Plastic sheeting** and duct tape
+• **Moist towelettes** for sanitation
+• Garbage bags and zip-lock bags
+• **Wrench/pliers** to turn off utilities
+
+### 📋 PERSONAL ITEMS:
+• **Medications** (7-day supply minimum)
+• **Copies of important documents** in waterproof container
+• **Cash in small bills**
+• Emergency contact information
+• **Change of clothing** per person
+• **Sleeping bags/blankets**
+• Personal hygiene items
+
+### 👶 SPECIAL NEEDS:
+• **Infant supplies**: diapers, formula, bottles
+• **Elderly care**: extra medications, mobility aids
+• **Pet supplies**: food, leash, carrier, medications
+• **Glasses/contacts** and cleaning supplies
+
+### � MAINTENANCE:
+• **Check supplies every 6 months**
+• Rotate food and water
+• Update documents and contact info
+• Test equipment (radio, flashlight)
+
+### � **Storage Tips:**
+• Keep in waterproof containers
+• Store in easily accessible location
+• Have smaller "go bags" for quick evacuation`;
+          }
+          
+          // Default response for unmatched queries
+          return `## 🚨 EMMA Emergency Dispatch Available
+
+**Evacuation Management and Monitoring Assistant**
+
+I didn't find a specific emergency protocol for **"${userMessage.text}"**, but I can coordinate emergency response for:
+
+### 🌊 **Natural Disaster Emergencies:**
+• Typhoon/storm emergency response
+• Earthquake rescue coordination
+• Flood evacuation and water rescue
+
+### 🚑 **Medical Emergency Dispatch:**
+• Heart attacks, strokes, severe injuries
+• Unconscious persons, choking emergencies
+• Medical team coordination and hospital routing
+
+### 🔥 **Fire/Safety Emergency Response:**
+• Building fires and smoke inhalation
+• Gas leaks and structural emergencies
+• Emergency evacuation coordination
+
+### 🆘 **Emergency Examples:**
+• "Heart attack - need ambulance NOW"
+• "Trapped by typhoon flooding"
+• "Building collapse from earthquake"
+• "House fire - need evacuation route"
+
+### � **LIFE-THREATENING EMERGENCY?**
+**Call 911 immediately, then return for guidance**
+
+**What is your emergency situation?**`;
+        };
+        
+        const botResponse = getEmergencyResponse(userText, currentLocation);
+
+        const assistantMessage: Message = {
+          id: Date.now().toString(),
+          text: botResponse,
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Fallback to AI model only if RAG response doesn't provide specific guidance
+        // (This could be used for complex queries that don't match our pre-defined patterns)
+        if (llamaContext && botResponse.includes("I didn't find a specific emergency protocol")) {
+          console.log('🤖 Falling back to AI model for complex emergency query...');
+          
+          try {
+            const response = await llamaContext.completion({
+              prompt: `Emergency dispatch for: ${userMessage.text}. Provide emergency guidance.`,
+              n_predict: 200,
+              temperature: 0.7,
+              top_k: 40,
+              top_p: 0.9,
+              stop: ['<end_of_turn>', '<start_of_turn>', 'user', 'User:', 'Human:'],
+            });
+
+            if (response.text?.trim()) {
+              const aiAssistantMessage: Message = {
+                id: Date.now().toString(),
+                text: `## 🤖 EMMA AI Emergency Support\n\n${response.text.trim()}`,
+                sender: 'assistant', 
+                timestamp: new Date().toISOString(),
+              };
+
+              setMessages(prev => [...prev, aiAssistantMessage]);
+            }
+          } catch (aiError) {
+            console.error('AI fallback error:', aiError);
+            // RAG response already sent, no need for additional error handling
+          }
+        }
       }
 
     } catch (error) {

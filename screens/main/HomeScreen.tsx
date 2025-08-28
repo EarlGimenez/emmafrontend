@@ -101,6 +101,10 @@ export default function HomeScreen() {
     navigation.navigate('RequestEntry');
   };
 
+  const handleEmergencyChat = () => {
+    navigation.navigate('EmergencyChat');
+  };
+
   // This function now adapts based on volunteer status
   const handleVolunteerSpecificAction = () => {
     if (isVolunteer) {
@@ -206,6 +210,11 @@ export default function HomeScreen() {
             <Ionicons name="arrow-forward" size={20} color="#333" />
           </TouchableOpacity>
         </View>
+
+        {/* Floating Chat Icon */}
+        <TouchableOpacity style={styles.floatingChatButton} onPress={handleEmergencyChat}>
+          <MaterialCommunityIcons name="chat" size={28} color="#fff" />
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -381,5 +390,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginLeft: 15,
+  },
+  floatingChatButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#007AFF',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
 });
