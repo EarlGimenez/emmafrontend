@@ -2,243 +2,226 @@
 
 import { useEffect, useState } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { colors, commonStyles } from "../../styles/commonStyles"
 import { fetcher } from "@/utils/fetcher"
 import { API_URLS } from "@/config/api"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const FinalRemindersScreen = ({ navigation, route }: any) => {
-  const [consentSharing, setConsentSharing] = useState(false);
-  const [consentAlerts, setConsentAlerts] = useState(false);
-  const [loading, setLoading] = useState(false);
+const SHEET_RADIUS = 20
 
-  // Destructure userData and userToken from route.params
-  // Provide default empty object to avoid errors if params are undefined
-  const { userData, userToken } = route.params || {};
+type AnyObj = Record<string, any>
 
-  // This useEffect is CRUCIAL. It ensures the token received from BasicInfoScreen
-  // (after a successful /register call) is immediately stored in AsyncStorage
-  // so that the 'fetcher' utility can pick it up for the subsequent completeRegistration call.
-  useEffect(() => {
-    const setAuthToken = async () => {
-      if (userToken) {
-        console.log("FinalRemindersScreen: Storing userToken:", userToken);
-        await AsyncStorage.setItem("userToken", userToken);
-      } else {
-        // This case indicates an issue in the previous navigation step
-        console.warn("FinalRemindersScreen: userToken is missing from route.params!");
-        // You might want to navigate back or show an error to the user
-      }
-
-      if (userData && userData.userId) {
-          console.log("FinalRemindersScreen: Received userData.userId:", userData.userId);
-      } else {
-          console.warn("FinalRemindersScreen: userData or userData.userId is missing from route.params!");
-      }
-    };
-
-    setAuthToken();
-  }, [userToken, userData]); // Re-run if userToken or userData changes
-
-  const handleCompleteRegistration = async () => {
-    if (!consentSharing || !consentAlerts) {
-      Alert.alert("Consent Required", "Please agree to both data sharing and alerts to complete registration.");
-      return;
-    }
-
-    if (!userData || !userData.userId) {
-      Alert.alert("Error", "User data is missing. Please restart the registration process.");
-      console.error("Missing userData or userId in FinalRemindersScreen params.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const finalUserData = {
-        ...userData,
-        status: 'active',
-        consents: {
-          dataSharing: consentSharing,
-          alerts: consentAlerts,
-          timestamp: new Date().toISOString(),
-        }
-      };
-
-      console.log("FinalRemindersScreen: Preparing to complete registration with finalUserData:", finalUserData);
-      // console.log("FinalRemindersScreen: Attempting to complete registration for userId:", userData.userId);
-      // console.log("FinalRemindersScreen: user token:", userToken);
-      if (!userToken) {
-        console.error("FinalRemindersScreen: userToken is missing! Cannot complete registration.");
-        Alert.alert("Error", "User token is missing. Please restart the registration process.");
-        return;
-      }
-      // The fetcher will automatically add the Authorization header because
-      // the token was set in AsyncStorage by the useEffect above.
-      const response = await fetcher(API_URLS.users.complete(userData.userId), {
-        method: "POST",
-        headers : { "Authorization": `Bearer ${userToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(finalUserData),
-      });
-
-      if (response.success) {
-        Alert.alert(
-          "Registration Complete",
-          "Thank you for completing your registration with E.M.M.A. You will now be redirected to the login screen.",
-          [
-            {
-              text: "OK",
-              onPress: async () => {
-                // IMPORTANT: Clear the token after successful registration if you want
-                // the user to explicitly log in with their now active account.
-                // If you want auto-login, you'd update AsyncStorage with the new user state.
-                await AsyncStorage.removeItem("userToken");
-                await AsyncStorage.removeItem("userData"); // Also clear any stored user data
-                
-                // Navigate back to the login screen
-                navigation.popToTop(); // Clears navigation stack
-                navigation.replace("Login");
-              },
-            },
-          ]
-        );
-      } else {
-        // This error will likely be caught by the fetcher and shown as an alert
-        throw new Error(response.message || "Failed to complete registration.");
-      }
-    } catch (error: any) {
-      console.error("FinalRemindersScreen: Error completing registration:", error.message);
-      // Fetcher already handles the alert for API errors.
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-
+function parseUserId(obj: AnyObj | undefined) {
+  if (!obj) return undefined
   return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
-      <View style={commonStyles.container}>
-        <View style={commonStyles.whiteContainer}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={commonStyles.title}>Final Reminders</Text>
-
-            <View style={styles.contentContainer}>
-              <Text style={styles.thankYouText}>
-                Thank you for completing your registration! Before you proceed, we’d like to remind you of our Data Privacy Notice and ask for your consent on the following:
-              </Text>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionText}>
-                  Your personal information will be used to provide efficient disaster response services. We will only share your data with authorized government agencies and disaster response teams. You can review our full Data Privacy Notice [here].
-                </Text>
-              </View>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Data Sharing Consent</Text>
-                <Text style={styles.sectionText}>
-                  To ensure coordinated disaster response, we may share your information with the following: Local Government Units (LGUs), Department of Social Welfare and Development (DSWD), and other relevant government agencies and disaster response teams.
-                </Text>
-
-                <TouchableOpacity style={styles.checkboxContainer} onPress={() => setConsentSharing(!consentSharing)}>
-                  <View style={[styles.checkbox, consentSharing && styles.checkboxChecked]} />
-                  <Text style={styles.checkboxText}>
-                    Yes, I consent to sharing my data with LGUs, DSWD, and other relevant agencies.
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Alerts and Notifications</Text>
-                <Text style={styles.sectionText}>
-                  To keep you informed during emergencies, we would like to send you alerts and notifications via SMS, email, or in-app messages.
-                </Text>
-
-                <TouchableOpacity style={styles.checkboxContainer} onPress={() => setConsentAlerts(!consentAlerts)}>
-                  <View style={[styles.checkbox, consentAlerts && styles.checkboxChecked]} />
-                  <Text style={styles.checkboxText}>Yes, I consent to receiving emergency alerts and notifications.</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.submitMessage}>
-                By clicking "Complete Registration", you confirm that you have read and agreed to the above consents.
-              </Text>
-            </View>
-          </ScrollView>
-
-          <View style={commonStyles.bottomButton}>
-            <TouchableOpacity
-              style={[commonStyles.button, (!consentSharing || !consentAlerts) && styles.disabledButton]}
-              onPress={handleCompleteRegistration}
-              disabled={!consentSharing || !consentAlerts}
-            >
-              <Text style={commonStyles.buttonText}>Complete Registration</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </LinearGradient>
+    obj.userId ?? obj.user_id ?? obj.id ??
+    obj.user?.id ?? obj.data?.user?.id ?? obj.data?.id
   )
 }
 
+const FinalRemindersScreen = ({ navigation, route }: any) => {
+  const [consentSharing, setConsentSharing] = useState(false)
+  const [consentAlerts, setConsentAlerts] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const initialUserData = route.params?.userData || {}
+  const initialToken = route.params?.userToken || null
+
+  const [userData, setUserData] = useState<any>(initialUserData)
+  const [userToken, setUserToken] = useState<string | null>(initialToken)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (initialToken) await AsyncStorage.setItem("userToken", initialToken)
+        if (!initialToken) {
+          const saved = await AsyncStorage.getItem("userToken")
+          if (saved) setUserToken(saved)
+        }
+      } catch {}
+    })()
+  }, [initialToken])
+
+  const handleCompleteRegistration = async () => {
+    if (!consentSharing || !consentAlerts) {
+      Alert.alert("Consent Required", "Please agree to both data sharing and alerts to complete registration.")
+      return
+    }
+
+    const uid = parseUserId(userData)
+    const finalUserData = {
+      ...userData,
+      userId: uid ?? userData?.userId,
+      status: "active",
+      consents: { dataSharing: consentSharing, alerts: consentAlerts, timestamp: new Date().toISOString() },
+    }
+
+    setLoading(true)
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      }
+      if (userToken) headers.Authorization = `Bearer ${userToken}`
+
+      const urlUserId = uid ?? userData?.userId
+      if (!urlUserId) throw new Error("Missing user id; please sign in to finish setup.")
+
+      const res = await fetcher(API_URLS.users.complete(urlUserId), {
+        method: "POST",
+        headers,
+        body: JSON.stringify(finalUserData),
+      })
+
+      if (res?.success === true || res?.status === "success" || res?.status === 200 || res?.status === 201) {
+        Alert.alert("Registration Complete", "You’ll be redirected to login.", [
+          {
+            text: "OK",
+            onPress: async () => {
+              await AsyncStorage.removeItem("userToken")
+              await AsyncStorage.removeItem("userData")
+              navigation.popToTop()
+              navigation.replace("Login")
+            },
+          },
+        ])
+      } else {
+        throw new Error(res?.message || "Could not finalize profile now. Please sign in to continue.")
+      }
+    } catch (e: any) {
+      Alert.alert(
+        "Almost done",
+        e?.message || "We saved your account. Please sign in to finish setup.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.popToTop()
+              navigation.replace("Login")
+            },
+          },
+        ]
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <View style={styles.sheet}>
+          <Text style={styles.title}>Final Reminders</Text>
+
+          <Text style={styles.lead}>
+            Thank you for completing your registration! Please review the notice and provide consent below.
+          </Text>
+
+          <Section
+            title="Data Privacy Notice"
+            description="We use your information to enable efficient disaster response. We only share data with authorized agencies (LGUs, DSWD, and relevant responders). You may review our full Data Privacy Notice [here]."
+          />
+
+          <Section
+            title="Data Sharing Consent"
+            description="To coordinate response, we may share your data with LGUs, DSWD, and other relevant teams."
+          >
+            <CheckLine checked={consentSharing} onToggle={() => setConsentSharing(!consentSharing)}>
+              Yes, I consent to sharing my data with authorized agencies.
+            </CheckLine>
+          </Section>
+
+          <Section
+            title="Alerts and Notifications"
+            description="To keep you informed during emergencies, we can send alerts via SMS, email, or in-app messages."
+          >
+            <CheckLine checked={consentAlerts} onToggle={() => setConsentAlerts(!consentAlerts)}>
+              Yes, I consent to receiving emergency alerts and notifications.
+            </CheckLine>
+          </Section>
+
+          <Text style={styles.smallNote}>
+            By tapping “Complete Registration”, you confirm you’ve read and agreed to the above consents.
+          </Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={[commonStyles.button, (!consentSharing || !consentAlerts || loading) && { opacity: 0.5 }]}
+          onPress={handleCompleteRegistration}
+          disabled={!consentSharing || !consentAlerts || loading}
+        >
+          <Text style={commonStyles.buttonText}>{loading ? "Submitting..." : "Complete Registration"}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+}
+
+const Section = ({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children?: React.ReactNode
+}) => (
+  <View style={{ marginBottom: 18 }}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    {!!description && <Text style={styles.body}>{description}</Text>}
+    {children ? <View style={{ marginTop: 10 }}>{children}</View> : null}
+  </View>
+)
+
+const CheckLine = ({
+  checked,
+  onToggle,
+  children,
+}: {
+  checked: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) => (
+  <TouchableOpacity onPress={onToggle} style={styles.checkRow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+    <View style={[styles.checkbox, checked && styles.checkboxChecked]} />
+    <Text style={styles.checkboxText}>{children}</Text>
+  </TouchableOpacity>
+)
+
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  sheet: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 60,
+    borderRadius: SHEET_RADIUS,
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingTop: 18,
+    paddingBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  thankYouText: {
-    fontSize: 16,
-    color: colors.primary,
-    marginBottom: 20,
-    lineHeight: 24,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: colors.primary,
-    marginBottom: 6,
-  },
-  sectionText: {
-    fontSize: 14,
-    color: "#333",
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    marginRight: 8,
-    borderRadius: 4,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-  },
-  checkboxText: {
-    fontSize: 14,
-    color: colors.primary,
-    flex: 1,
-  },
-  submitMessage: {
-    fontSize: 13,
-    color: "#666",
-    lineHeight: 18,
-    marginTop: 10,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
+
+  title: { fontSize: 22, fontWeight: "700", color: colors.primary, textAlign: "center", marginBottom: 12 },
+  lead: { fontSize: 15, color: colors.primary, lineHeight: 22, marginBottom: 16, textAlign: "center" },
+
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.primary, marginBottom: 6 },
+  body: { fontSize: 14, color: "#333", lineHeight: 20 },
+
+  checkRow: { flexDirection: "row", alignItems: "center" },
+  checkbox: { width: 20, height: 20, borderWidth: 2, borderColor: colors.primary, marginRight: 10, borderRadius: 4 },
+  checkboxChecked: { backgroundColor: colors.primary },
+  checkboxText: { fontSize: 14, color: "#333", flex: 1, lineHeight: 20 },
+
+  smallNote: { fontSize: 12, color: "#666", marginTop: 6 },
+
+  bottomBar: { position: "absolute", left: 16, right: 16, bottom: 24 },
 })
 
 export default FinalRemindersScreen

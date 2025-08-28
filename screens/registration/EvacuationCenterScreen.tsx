@@ -1,233 +1,219 @@
 "use client"
 
-import { useState, useEffect  } from "react"
+import { useState, useEffect } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
+
 import { colors, commonStyles } from "../../styles/commonStyles"
+import RegistrationHeader from "../../components/screen_components/RegistrationHeader"
 import { fetcher } from "../../utils/fetcher"
 import { API_URLS } from "@/config/api"
 
 interface Center {
-    id: number
-    name: string
-    description?: string
-    latitude: number
-    longitude: number
-    distance: number  // in km, provided by backend
-    category: string
+  id: number
+  name: string
+  description?: string
+  latitude: number
+  longitude: number
+  distance: number  // km
+  category: string
 }
 
-interface Coordinates {
-    lat: number
-    lng: number
-}
+const HEADER_HEIGHT = 140
+const DIP_HEIGHT = 56
+const DIP_OVERLAP = 24
+const HEADER_OFFSET = HEADER_HEIGHT + (DIP_HEIGHT - DIP_OVERLAP) + 12
+const SCROLL_BOTTOM_SPACING = 80
 
-interface LocationData {
-    coordinates: Coordinates
-    address?: string
-}
-
-
-// Update the component definition to use the interfaces
 const EvacuationCenterScreen = ({ navigation, route }: any) => {
-  const [selectedCenter, setSelectedCenter] = useState<number | null>(null)
   const [centers, setCenters] = useState<Center[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const { locationData } = route.params || {}
-  const coordinates = locationData?.coordinates
+  const coordinates = route.params?.locationData?.coordinates
 
-useEffect(() => {
-    if (coordinates) {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const fetchData = async () => {
-          const response = await fetcher(API_URLS.mapGeoCode.nearest, {
-            method: 'GET',
-            params: {
-              latitude: String(coordinates.lat),
-              longitude: String(coordinates.lng)
-            }
-          })
-
-          if (response.error) {
-            setError(response.message)
-            return;
-          }
-
-          console.log("Evacuation centers response:", response)
-
-          // Assuming response is directly the array of centers
-          if (Array.isArray(response)) {
-            setCenters(response.map((center: any) => ({
-              ...center,
-              distance: center.distance,
-              time: computeEstimatedTime(center.distance)
-            })))
-          } else {
-            setError('Invalid response format')
-          }
-        }
-
-        const timeoutId = setTimeout(() => {
-          if (loading) {
-            setError('Request took too long (5 seconds)')
-            setLoading(false)
-          }
-        }, 5000)
-
-        fetchData()
-          .catch(error => setError(error.message))
-          .finally(() => {
-            clearTimeout(timeoutId)
-            setLoading(false)
-          })
-
-      } catch (error: any) {
-        setError(error.message)
-        setLoading(false)
-      }
-    }
-  }, [coordinates])    
   const computeEstimatedTime = (distanceKm: number): string => {
-    const walkingSpeedKmph = 5  // 5 km/h (avg walking speed)
-    const timeHours = distanceKm / walkingSpeedKmph
-    const timeMinutes = Math.round(timeHours * 60)
+    const walkingSpeedKmph = 5
+    const timeMinutes = Math.round((distanceKm / walkingSpeedKmph) * 60)
     return `${timeMinutes} mins`
   }
 
-const handleCenterSelect = (centerId: number) => {
-  const center = centers.find(c => c.id === centerId);
-  
-  navigation.navigate("EvacuationDetails", { 
-    center,
-    userLocation: {
-      latitude: coordinates.lat,
-      longitude: coordinates.lng
-    },
-    userData: route.params?.userData // Pass through the userData
-  });
-};
+  useEffect(() => {
+    if (!coordinates) return
+    let timeoutId: any
 
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetcher(API_URLS.mapGeoCode.nearest, {
+          method: "GET",
+          params: { latitude: String(coordinates.lat), longitude: String(coordinates.lng) },
+        })
+
+        if (response?.error) {
+          setError(response.message || "Failed to fetch centers")
+          return
+        }
+
+        if (Array.isArray(response)) {
+          setCenters(
+            response.map((c: any) => ({
+              ...c,
+              distance: c.distance,
+            }))
+          )
+        } else {
+          setError("Invalid response format")
+        }
+      } catch (e: any) {
+        setError(e?.message || "Something went wrong")
+      } finally {
+        clearTimeout(timeoutId)
+        setLoading(false)
+      }
+    }
+
+    timeoutId = setTimeout(() => {
+      if (loading) {
+        setError("Request took too long (5 seconds)")
+        setLoading(false)
+      }
+    }, 5000)
+
+    fetchData()
+    return () => clearTimeout(timeoutId)
+  }, [coordinates])
+
+  const handleCenterSelect = (centerId: number) => {
+    const center = centers.find((c) => c.id === centerId)
+    if (!center) return
+
+    navigation.navigate("EvacuationDetails", {
+      center,
+      userLocation: { latitude: coordinates.lat, longitude: coordinates.lng },
+      userData: route.params?.userData,
+    })
+  }
+
+  // Loading state
   if (loading) {
     return (
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
-        <View style={commonStyles.container}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </LinearGradient>
+      <View style={styles.container}>
+        <ScrollView style={{ marginTop: HEADER_OFFSET }} contentContainerStyle={styles.centerWrap}>
+          <View style={styles.sheetCenter}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Finding nearby evacuation centers...</Text>
+          </View>
+        </ScrollView>
+        <RegistrationHeader title="Evacuation Centers" onBackPress={() => navigation.goBack()} />
+      </View>
     )
   }
 
+  // Error state
   if (error) {
     return (
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
-        <View style={commonStyles.container}>
-          <Text>Error: {error}</Text>
-        </View>
-      </LinearGradient>
+      <View style={styles.container}>
+        <ScrollView style={{ marginTop: HEADER_OFFSET }} contentContainerStyle={styles.centerWrap}>
+          <View style={styles.sheetCenter}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+            <TouchableOpacity
+              style={[commonStyles.button, { marginTop: 12 }]}
+              onPress={() => {
+                setError(null)
+                setLoading(true)
+              }}
+            >
+              <Text style={commonStyles.buttonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+        <RegistrationHeader title="Evacuation Centers" onBackPress={() => navigation.goBack()} />
+      </View>
     )
   }
 
+  // Normal
   return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
-      <View style={commonStyles.container}>
-        <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Evacuation Centers</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView
+        style={{ marginTop: HEADER_OFFSET }}
+        contentContainerStyle={{ paddingBottom: SCROLL_BOTTOM_SPACING }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.sheet}>
+          <Text style={commonStyles.title}>Suggested Evacuation Centers</Text>
+          <Text style={styles.description}>
+            Suggestions are based on accessibility and proximity from the location you provided. Select a center to view
+            details and routes.
+          </Text>
 
-        <View style={commonStyles.whiteContainer}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={commonStyles.title}>Suggested Evacuation Centers</Text>
-
-            <View style={styles.contentContainer}>
-              <Text style={styles.description}>
-                Evacuation center suggestions are based on factors like accessibility and proximity from the information you provided.
-                {"\n\n"}
-                Select your preferred evacuation center and view details and routes.
-              </Text>
-
-              <View style={styles.centersList}>
-                {centers.map(center => (
-                  <TouchableOpacity
-                    key={center.id}
-                    style={styles.centerButton}
-                    onPress={() => handleCenterSelect(center.id)}
-                  >
-                    <View style={styles.centerInfo}>
-                      <Text style={styles.centerName}>{center.name}</Text>
-                      <View style={styles.centerDetails}>
-                        <Text style={styles.centerDistance}>{center.distance.toFixed(1)} km</Text>
-                        <Text style={styles.centerTime}>• {computeEstimatedTime(center.distance)}</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.centerArrow}>→</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </ScrollView>
+          <View style={{ gap: 12 }}>
+            {centers.map((center) => (
+              <TouchableOpacity key={center.id} style={styles.centerButton} onPress={() => handleCenterSelect(center.id)}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.centerName}>{center.name}</Text>
+                  <View style={styles.centerDetails}>
+                    <Text style={styles.centerMeta}>{center.distance.toFixed(1)} km</Text>
+                    <Text style={styles.centerMeta}> • {computeEstimatedTime(center.distance)}</Text>
+                  </View>
+                </View>
+                <Text style={styles.centerArrow}>→</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
-    </LinearGradient>
+      </ScrollView>
+
+      <RegistrationHeader title="Evacuation Centers" onBackPress={() => navigation.goBack()} />
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: { flex: 1, backgroundColor: "#fff" },
+  sheet: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    borderRadius: 16,
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingTop: 16,
+    paddingBottom: 24,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 6 },
+    // shadowOpacity: 0.08,
+    // shadowRadius: 12,
+    elevation: 4,
   },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginBottom: 30,
-    textAlign: "center",
+  sheetCenter: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  centersList: {
-    gap: 15,
-  },
+  centerWrap: { paddingBottom: 80, justifyContent: "center", alignItems: "stretch", flexGrow: 1 },
+  description: { fontSize: 14, color: "#666", lineHeight: 20, marginBottom: 12, textAlign: "center" },
   centerButton: {
     backgroundColor: colors.secondary,
-    padding: 20,
-    borderRadius: 15,
+    padding: 16,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  centerInfo: {
-    flex: 1,
-  },
-  centerName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.white,
-    marginBottom: 5,
-  },
-  centerDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  centerDistance: {
-    fontSize: 14,
-    color: colors.white,
-    opacity: 0.9,
-  },
-  centerTime: {
-    fontSize: 14,
-    color: colors.white,
-    opacity: 0.9,
-    marginLeft: 5,
-  },
-  centerArrow: {
-    fontSize: 20,
-    color: colors.white,
-    fontWeight: "bold",
-  },
+  centerName: { fontSize: 16, fontWeight: "700", color: colors.white, marginBottom: 4 },
+  centerDetails: { flexDirection: "row", alignItems: "center" },
+  centerMeta: { fontSize: 14, color: colors.white, opacity: 0.9 },
+  centerArrow: { fontSize: 20, color: colors.white, fontWeight: "bold", marginLeft: 10 },
+  loadingText: { fontSize: 16, color: colors.primary, marginTop: 16, textAlign: "center" },
+  errorText: { fontSize: 16, color: "#d32f2f", textAlign: "center" },
 })
 
 export default EvacuationCenterScreen

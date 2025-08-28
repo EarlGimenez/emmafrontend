@@ -32,6 +32,32 @@ export const commonStyles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
   },
+  whiteContainerWithHeader: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    flex: 1,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
+  whiteContainerWithOverlayHeader: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    flex: 1,
+    marginTop: 150, // Leave space for the overlay header
+    paddingTop: 70, // Extra padding to account for the curved overlay
+    paddingHorizontal: 20,
+  },
+  whiteContainerWithRegistrationHeader: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    flex: 1,
+    marginTop: 160, // Leave space for the registration header (140 + 25 - 24 + some breathing room)
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
   title: {
     fontSize: 28,
     fontWeight: "bold",

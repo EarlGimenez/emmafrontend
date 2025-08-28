@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native"
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera"
-import { LinearGradient } from "expo-linear-gradient"
+
 import { colors, commonStyles } from "../../styles/commonStyles"
 import { API_URLS } from "@/config/api"
 import { fetcher } from "@/utils/fetcher"
@@ -94,7 +94,7 @@ const handleBarCodeScanned = async ({ data }: { data: string }) => {
 
   if (!permission.granted) {
     return (
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+      <View style={styles.container}>
         <View style={[commonStyles.container, { justifyContent: "center", padding: 20 }]}>
           <Text style={styles.instructionText}>We need your permission to scan QR codes</Text>
           <TouchableOpacity 
@@ -104,12 +104,12 @@ const handleBarCodeScanned = async ({ data }: { data: string }) => {
             <Text style={commonStyles.buttonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
     )
   }
 
  return (
-    <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={commonStyles.mainThemeBackground}>
+    <View style={styles.container}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
           <Text style={commonStyles.backArrow}>←</Text>
@@ -162,11 +162,15 @@ const handleBarCodeScanned = async ({ data }: { data: string }) => {
           </View>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
   contentContainer: {
     flex: 1,
     paddingHorizontal: 20,
