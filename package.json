@@ -72,6 +72,7 @@
     "react-hook-form": "^7.54.1",
     "react-native": "latest",
     "react-native-gesture-handler": "latest",
+    "react-native-llm-mediapipe": "^0.5.0",
     "react-native-maps": "1.20.1",
     "react-native-reanimated": "^3.17.4",
     "react-native-safe-area-context": "latest",
