@@ -1,24 +1,24 @@
-## EMMA Frontend (mobile-first)
+## EMMA Frontend (mobile-first) 🚑📱
 
 This repository is the mobile-first frontend for E.M.M.A., built primarily with Expo and React Native for Android and iOS devices. The app is designed for field use during emergency response and social assistance: quick household registration, multi-path verification of vulnerable members, household scanning, location-aware request/donation workflows, and volunteer coordination.
 
 A lightweight Next.js wrapper exists to support a web entry (`app/page.tsx`), but the app is designed and optimized for mobile devices — offline support patterns, camera/QR utilities, GPS/location tracking, and touch-first navigation are prioritized.
 
-### Mobile-first notes
+### Mobile-first notes ⚙️
 
 - Primary target platforms: Android and iOS via Expo (managed workflow).
 - Mobile-specific features: camera & QR scanning, background location tracking, offline/local storage (AsyncStorage), and deep integration with device sharing and filesystem APIs.
 - Navigation and UX are built for mobile: Stack and Drawer navigators, large-touch targets, and step-by-step registration flows.
 - The Next.js/web entrypoint is for convenience and web previews; production usage should assume mobile as the primary platform.
 
-## Quick summary
+## Quick summary 🔎
 
 - Primary frameworks: React Native (Expo) + React Navigation. A Next.js `app/` entry is present and proxies to the React Native `App` for web.
 - Language: TypeScript + React.
 - Styling: Tailwind + custom CSS and design system components (Radix UI primitives used for some UI elements on web).
 - State & utilities: Axios for HTTP, AsyncStorage for local storage, date-fns, zod for validation.
 
-## Key features
+## Key features ✨
 
 
 - Multi-path registration & verification: the app contains many specialized verification screens (PWD, senior, parental consent, parent verification, OTP and verification success) and account setup flows culminating in account success and final reminders.
@@ -28,7 +28,7 @@ A lightweight Next.js wrapper exists to support a web entry (`app/page.tsx`), bu
 - Location & emergency features: evacuation center lookup and details, location details entry, and maps/location tracking utilities.
 - Auth and onboarding UX: Loading and Login screens handle authentication and redirection into the main app (Drawer + Stack navigation).
 
-## Repository structure (high level)
+## Repository structure (high level) 🗂️
 
 - `App.tsx` - main React Native app entry using React Navigation (Stack + Drawer). Navigation links to all primary screens.
 - `app/` - Next.js App Router files. `app/page.tsx` returns the native `App` component for web.
@@ -39,7 +39,7 @@ A lightweight Next.js wrapper exists to support a web entry (`app/page.tsx`), bu
 - `assets/`, `public/` - images, fonts and static assets.
 - `config/`, `lib/`, `utils/`, `hooks/` - API client, helpers, and utilities.
 
-## Tech stack & notable deps
+## Tech stack & notable deps 🧰
 
 - Expo (managed) + React Native
 - React Navigation (stack + drawer)
@@ -50,13 +50,13 @@ A lightweight Next.js wrapper exists to support a web entry (`app/page.tsx`), bu
 
 See `package.json` for the full dependency list.
 
-## Prerequisites
+## Prerequisites ✅
 
 - Node.js (recommended >= 18)
 - pnpm (recommended) or npm/yarn
 - Expo CLI (optional globally) if you prefer `expo` commands directly: `npm install -g expo-cli` or use `npx expo` / `pnpm dlx expo`.
 
-## Install
+## Install 🛠️
 
 Open a terminal in the project root and run (choose pnpm or npm):
 
@@ -68,7 +68,7 @@ pnpm install
 npm install
 ```
 
-## Run (development)
+## Run (development) ▶️
 
 Use the scripts in `package.json`. Typical flows:
 
@@ -92,7 +92,7 @@ Notes:
 - The repository uses Expo as the primary start command. The `app/` Next.js files are set up so the Next entrypoint imports and renders the `App` component — this makes it possible to run a web build that leverages the same React components.
 - If you want to build a production web bundle with Next.js, inspect `next.config.mjs` and adapt scripts; this project currently uses Expo-first scripts in `package.json`.
 
-## Running lint
+## Running lint 🧹
 
 ```powershell
 pnpm lint
@@ -100,36 +100,44 @@ pnpm lint
 npm run lint
 ```
 
-## Useful files
+## Useful files 📁
 
 - `App.tsx` — navigation structure and app bootstrap.
 - `app/page.tsx` — Next.js page that renders the native `App` for web.
 - `config/api.ts` — API client and endpoint config.
 - `utils/locationTracking.ts` — location background tracking helpers.
 
-## Development notes & tips
+## Development notes & tips 💡
 
 - The navigation structure is implemented with a main Stack navigator and a nested Drawer (`MainAppDrawer`) that contains `Home` and other drawer-accessible screens.
 - Registration is a long linear flow: many screens live under `screens/registration` and are registered as Stack screens in `App.tsx`.
 - Many components are shared between web and native; platform-specific hooks live under `components/` (for example `useClientOnlyValue.*`).
 - Tailwind and Radix primitives are used for UI consistency; check `components/ui/` for patterns to reuse.
 
-## Contributing
+## Contributing 🤝
 
 - Open an issue to discuss larger changes.
 - Create feature branches from `master` and open pull requests with a short description and testing notes.
 
-## License
+## License 📄
 
 No license file provided in the repository. Add a `LICENSE` file if you wish to open-source this project.
 
 ---
 
-If you want, I can also:
-- Add a short developer quickstart script (PowerShell task) or GitHub Actions workflow for linting/CI.
-- Create a smaller README per folder (for `screens/`, `components/`) to guide contributors.
+## Expected output 📱
 
-## Screens overview
+When the mobile app runs on a device you should expect the following outcomes:
+
+- ✅ Guided, step-by-step registration with OTP and specialized verification flows (PWD, senior, parental consent).
+- 🏠 Household and family workflows: scan or enter household data, create or lookup a family, then view and manage "My Family" and tracking details.
+- 🆘 Requests & donations: submit requests, follow processing flows, and view your requests history; donors and coordinators can review incoming requests.
+- 🧭 Location-aware behavior: view evacuation centers and details, share location, and (with permission) run background location tracking for monitoring.
+- 👥 Volunteer flows: register, provide experience/background info, and submit applications which can be confirmed in-app.
+
+These are the intended user-facing behaviors when the app is used on Android or iOS via Expo.
+
+## Screens overview 📋
 
 This project contains the following screens grouped by feature area (listed by filename):
 
@@ -171,7 +179,3 @@ This project contains the following screens grouped by feature area (listed by f
 	- `VolunteerExperienceScreen.tsx` — capture volunteer experience details.
 	- `VolunteerBackgroundCheckScreen.tsx` — background-check workflow.
 	- `VolunteerApplicationSubmittedScreen.tsx` — post-submission confirmation.
-
-If you'd like, I can also:
-- Add short descriptions per screen (from source files) to make onboarding faster for new contributors.
-- Generate a simple flow diagram or a mapping of navigation (Stack/Drawer) to visualize where each screen lives.
