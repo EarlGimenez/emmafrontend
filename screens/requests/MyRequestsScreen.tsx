@@ -134,7 +134,7 @@ const MyRequestsScreen = () => {
     <View style={[commonStyles.container, {backgroundColor: colors.primary}]}>
       <View style={commonStyles.container}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← My Requests</Text>
+          <Text style={[commonStyles.backButtonText, {fontSize: 22}]}>← My Requests</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

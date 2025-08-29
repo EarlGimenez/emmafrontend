@@ -452,7 +452,7 @@ const RequestProcessScreen = () => {
   return (
       <View style={[commonStyles.container, {backgroundColor: colors.primary}]}>
         <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={commonStyles.backButtonText}>← Request Assistance</Text>
+          <Text style={[commonStyles.backButtonText, {fontSize: 22}]}>← Request Assistance</Text>
         </TouchableOpacity>
 
         <View style={commonStyles.whiteContainer}>

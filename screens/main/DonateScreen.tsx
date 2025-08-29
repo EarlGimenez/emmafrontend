@@ -296,7 +296,7 @@ const DonateScreen = () => {
   return (
     <View style={[commonStyles.container, { backgroundColor: colors.primary }]}>
       <TouchableOpacity style={commonStyles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={commonStyles.backButtonText}>← Donate</Text>
+        <Text style={[commonStyles.backButtonText, {fontSize: 22}]}>← Donate</Text>
       </TouchableOpacity>
 
       <View style={commonStyles.whiteContainer}>
