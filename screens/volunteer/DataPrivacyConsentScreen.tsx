@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, commonStyles } from '../../styles/commonStyles';
 import Checkbox from 'expo-checkbox'; // Import Checkbox component
 
 // Install expo-checkbox if you haven't: npx expo install expo-checkbox
@@ -21,8 +22,8 @@ export default function DataPrivacyConsentScreen() {
   };
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.header}>
+    <View style={[commonStyles.container, { backgroundColor: colors.primary }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -93,7 +94,7 @@ export default function DataPrivacyConsentScreen() {
           </View>
         </ScrollView>
 
-        <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+        <TouchableOpacity style={[styles.confirmButton, { backgroundColor: colors.primary }]} onPress={handleConfirm}>
           <Text style={styles.confirmButtonText}>Confirm</Text>
         </TouchableOpacity>
       </View>
