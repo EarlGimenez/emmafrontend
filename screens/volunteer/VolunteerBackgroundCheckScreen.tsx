@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIn
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { colors, commonStyles } from '../../styles/commonStyles';
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api'; // IMPORTANT: Replace with your actual Laravel API URL
 
@@ -90,7 +91,7 @@ export default function VolunteerBackgroundCheckScreen() {
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -108,7 +109,7 @@ export default function VolunteerBackgroundCheckScreen() {
             Upload a clear photo or scan of Police Clearance or NBI Clearance.
           </Text>
           <TouchableOpacity
-            style={styles.uploadButton}
+            style={[styles.uploadButton, { backgroundColor: colors.primary }]}
             onPress={() => pickDocument(setClearanceUri, setClearanceFileName, 'Police Clearance')}
             disabled={loading}
           >
@@ -126,7 +127,7 @@ export default function VolunteerBackgroundCheckScreen() {
             <Text style={styles.downloadLinkText}>Download the DSWD Volunteer Application Form [here]</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.uploadButton}
+            style={[styles.uploadButton, { backgroundColor: colors.primary }]}
             onPress={() => pickDocument(setDswdFormUri, setDswdFormFileName, 'DSWD Form')}
             disabled={loading}
           >
@@ -138,7 +139,7 @@ export default function VolunteerBackgroundCheckScreen() {
 
         </ScrollView>
 
-        <TouchableOpacity style={styles.confirmButton} onPress={() => navigation.navigate('VolunteerApplicationSubmitted')} disabled={loading}>
+        <TouchableOpacity style={[styles.confirmButton, { backgroundColor: colors.primary }]} onPress={() => navigation.navigate('VolunteerApplicationSubmitted')} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (

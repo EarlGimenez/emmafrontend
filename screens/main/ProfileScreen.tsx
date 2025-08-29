@@ -127,7 +127,7 @@ const ProfileScreen = () => {
         <View style={styles.profilePictureSection}>
           <Ionicons name="person-circle-outline" size={100} color={colors.primary} />
           <Text style={styles.userName}>{userData?.name || "N/A"}</Text>
-          {userData!.account_type && (
+          {userData?.account_type && (
             <Text style={styles.userAccountType}>{userData.account_type.toUpperCase()}</Text>
           )}
           {userData?.status === 'active' && (

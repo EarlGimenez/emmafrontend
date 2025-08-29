@@ -6,6 +6,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetcher } from '@/utils/fetcher';
 import { API_URLS } from '@/config/api';
+import { colors } from '@/styles/commonStyles';
 
 // Define the RootStackParamList type, ensuring 'MainAppDrawer' is included
 type RootStackParamList = {
@@ -48,7 +49,7 @@ export default function VolunteerApplicationSubmittedScreen() {
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Text style={styles.headerTitle}>Volunteer Application</Text>
       </View>
       <View style={styles.container}>
@@ -62,7 +63,7 @@ export default function VolunteerApplicationSubmittedScreen() {
             You will receive a notification once your application has been approved.
           </Text>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleFinish} disabled={loading}>
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleFinish} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (

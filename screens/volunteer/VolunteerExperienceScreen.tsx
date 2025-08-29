@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert,
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { colors, commonStyles } from '../../styles/commonStyles';
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api'; // IMPORTANT: Replace with your actual Laravel API URL
 
@@ -108,8 +109,8 @@ export default function VolunteerExperienceScreen() {
   };
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.header}>
+    <View style={[styles.outerContainer, { backgroundColor: colors.primary }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -143,7 +144,7 @@ export default function VolunteerExperienceScreen() {
           />
 
           <Text style={styles.subHeading}>Certifications</Text>
-          <TouchableOpacity style={styles.uploadButton} onPress={pickCertification} disabled={loading}>
+          <TouchableOpacity style={[styles.uploadButton, { backgroundColor: colors.primary }]} onPress={pickCertification} disabled={loading}>
             <Text style={styles.uploadButtonText}>
               {certificationUri ? 'Change Uploaded File' : 'Upload Certifications'}
             </Text>
@@ -152,7 +153,7 @@ export default function VolunteerExperienceScreen() {
 
         </ScrollView>
 
-        <TouchableOpacity style={styles.nextButton} onPress={() => navigation.navigate('VolunteerBackgroundCheck')} disabled={loading}>
+        <TouchableOpacity style={[styles.nextButton, { backgroundColor: colors.primary }]} onPress={() => navigation.navigate('VolunteerBackgroundCheck')} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
