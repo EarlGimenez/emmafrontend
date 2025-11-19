@@ -19,19 +19,26 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      // The following permissions are required:
+      // - RECORD_AUDIO: Needed for emergency voice messaging functionality in disaster relief scenarios.
+      // - FOREGROUND_SERVICE: Enables background location tracking and other critical foreground tasks for user safety.
       "permissions": [
         "CAMERA",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO", // Used for emergency voice messaging
+        "android.permission.FOREGROUND_SERVICE", // Required for background location tracking and foreground tasks
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
       "config": {
         "googleMaps": {
           "apiKey": "YOUR_ANDROID_MAPS_API_KEY"
         }
-      }
+      },
+      "package": "com.anonymous.emmafrontend"
     },
-
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -53,8 +60,9 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-     "plugins": [
+    "plugins": [
       "expo-router",
+      "expo-dev-client",
       [
         "expo-camera",
         {

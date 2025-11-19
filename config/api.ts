@@ -3,9 +3,10 @@ const GIMENEZ_DESKTOP_IP = '192.168.0.224'
 const GIMENEZ_DESKTOP_IP2 = '172.26.64.1'
 const GIMENEZ_LAPTOP_IP = '172.30.11.254'
 const GIMENEZ_LAPTOP_IP2 = '192.168.0.25'
+const GIMENEZ_LAPTOP_IP3_MAIN = '192.168.56.1';
 
 // Define the API URLs for development and production environments
-const DEV_IP = GIMENEZ_LAPTOP_IP2 // Your development machine IP
+const DEV_IP = GIMENEZ_LAPTOP_IP3_MAIN // Your development machine IP
 const DEV_PORT = '8000'
 const PROD_URL = 'https://api.yourapp.com' // Future production URL
 
