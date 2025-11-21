@@ -273,8 +273,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "absolute",
     bottom: 30,
-    left: 30,
-    right: 40,
+    // Removed left and right to allow true centering
   },
 });
 

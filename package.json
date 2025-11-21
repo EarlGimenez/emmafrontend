@@ -51,7 +51,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
-    "expo": "^53.0.11",
+    "expo": "^54.0.13",
     "expo-camera": "~16.1.8",
     "expo-checkbox": "~4.1.4",
     "expo-clipboard": "^7.1.4",
@@ -88,7 +88,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-  "@react-native-community/cli": "latest",
+    "@react-native-community/cli": "latest",
     "@types/inherits": "^2.0.0",
     "@types/node": "^22",
     "@types/react": "^19",
