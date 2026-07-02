@@ -54,6 +54,13 @@ export const API_URLS = {  family: {
     submit: `${BASE_URL}/requests/submit`,
     myRequests: `${BASE_URL}/requests/my`,
   },
+  // Data Layer endpoints — Ryu Mendoza (AAIH 2026)
+  households: {
+    vulnerability: (familyId: string | number) => `${BASE_URL}/households/${familyId}/vulnerability`,
+  },
+  resources: `${BASE_URL}/resources`,
+  situationReports: `${BASE_URL}/situation-reports`,
+  agentLogs: `${BASE_URL}/agent-logs`,
 }
 
 //'172.30.11.254' -- Gimenez Laptop
